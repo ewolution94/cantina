@@ -1,0 +1,52 @@
+name: CI
+
+# Runs on pull requests, and is the gate docker-publish.yml calls before it publishes
+# anything, so the checks guarding a PR and the checks guarding a deploy can't drift apart.
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Matches the Dockerfile. The unit tests import TypeScript directly, which
+          # needs Node's built-in type stripping (unflagged since Node 23.6).
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # The built app served by the real production server. The photo proxy must only ever
+      # reach Kochwerk's image host, and only image paths on it.
+      - name: Smoke test the production server
+        run: |
+          PORT=4899 CANTINA_CACHE=/tmp/cantina-menu.json node server/server.mjs &
+          for _ in $(seq 1 20); do curl -sf http://127.0.0.1:4899/healthz && break; sleep 0.5; done
+          curl -sf http://127.0.0.1:4899/ | grep -q '<title>Cantina</title>'
+          curl -sf http://127.0.0.1:4899/elbe/2026-10-01 | grep -q '<title>Cantina</title>'
+          test "$(curl -s -o /dev/null -w '%{http_code}' --path-as-is 'http://127.0.0.1:4899/img/KMSLiveRessources/../../etc/passwd.jpg')" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:4899/img/elsewhere/x.jpg')" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:4899/api/menu)" = 405

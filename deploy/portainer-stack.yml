@@ -1,0 +1,35 @@
+# The Cantina stack Portainer runs on the NAS.
+#
+# This is deliberately NOT the repo's docker-compose.yml. That one carries `build: .`,
+# which would make Portainer compile Cantina on the NAS instead of pulling the image
+# CI already published. Paste this into Portainer's stack editor (or point a
+# Git-backed stack at this file), never that one.
+#
+# Auto-updates come from the shared Watchtower stack (clinch/deploy/watchtower-stack.yml),
+# which only touches containers carrying the label below. With it, a push to `release`
+# is the entire deploy.
+
+services:
+  cantina:
+    image: ghcr.io/ewolution94/cantina:latest
+    container_name: cantina
+    restart: unless-stopped
+    ports:
+      # Next to Fermata (4800). Change both numbers if 4900 is taken on the NAS.
+      - "4900:4900"
+    environment:
+      - PORT=4900
+      - TZ=Europe/Berlin
+      # Defaults are right for OTTO Kochwerk; only here to make them easy to find.
+      # - CANTINA_LOCATION=1800
+      # - CANTINA_TTL=15
+    volumes:
+      # The last good menu, so a container update or a Kochwerk outage never shows an empty page.
+      - cantina-data:/data
+    labels:
+      # The opt-in the shared Watchtower looks for (it runs with
+      # WATCHTOWER_LABEL_ENABLE=true, so unlabelled containers are never touched).
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  cantina-data:

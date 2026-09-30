@@ -1,0 +1,434 @@
+/* Registered so the ambient tint can glide when the outlet (and so its photo's colour) changes. */
+@property --accent-h {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 250;
+}
+@property --accent-c {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.08;
+}
+
+:root {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --page: 1240px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --bar-h: 60px;
+
+  --accent-h: 250;
+  --accent-c: 0.08;
+  transition:
+    --accent-h 1.2s var(--ease),
+    --accent-c 1.2s var(--ease);
+
+  /* Dark (default) */
+  color-scheme: dark;
+  --bg: oklch(0.145 0.005 270);
+  --bg-raised: oklch(0.185 0.006 270);
+  --panel: oklch(0.19 0.006 270 / 0.66);
+  --panel-solid: oklch(0.19 0.006 270);
+  --line: oklch(1 0 0 / 0.075);
+  --line-strong: oklch(1 0 0 / 0.14);
+  --fill: oklch(1 0 0 / 0.035);
+  --fill-2: oklch(1 0 0 / 0.065);
+  --fill-3: oklch(1 0 0 / 0.1);
+  --fg: oklch(0.97 0.003 270);
+  --fg-2: oklch(0.77 0.01 270);
+  --fg-3: oklch(0.6 0.012 270);
+  --fg-4: oklch(0.45 0.012 270);
+  --invert: oklch(0.97 0.003 270);
+  --invert-ink: oklch(0.16 0.005 270);
+  --dot: oklch(0.93 0.005 270);
+  --glow: oklch(0.6 calc(var(--accent-c) * 1.2) var(--accent-h) / 0.22);
+  --tint: oklch(0.8 var(--accent-c) var(--accent-h));
+  --open: oklch(0.8 0.16 150);
+  --soon: oklch(0.83 0.14 85);
+  --closed: oklch(0.6 0.012 270);
+  --danger: oklch(0.71 0.17 25);
+  --highlight: inset 0 1px 0 oklch(1 0 0 / 0.05);
+  --shadow: 0 30px 70px -30px oklch(0 0 0 / 0.75), 0 2px 8px -2px oklch(0 0 0 / 0.3);
+  --grid-a: 0.055;
+
+  /* Content colours: what a dish is, how heavy its footprint is. Lightness per theme. */
+  --diet-l: 0.78;
+  --diet-c: 0.13;
+  --co2-l: 0.76;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --bg: oklch(0.975 0.005 85);
+    --bg-raised: oklch(0.995 0.002 85);
+    --panel: oklch(1 0 0 / 0.72);
+    --panel-solid: oklch(0.995 0.002 85);
+    --line: oklch(0.25 0.01 270 / 0.09);
+    --line-strong: oklch(0.25 0.01 270 / 0.17);
+    --fill: oklch(0.25 0.01 270 / 0.035);
+    --fill-2: oklch(0.25 0.01 270 / 0.06);
+    --fill-3: oklch(0.25 0.01 270 / 0.1);
+    --fg: oklch(0.2 0.01 270);
+    --fg-2: oklch(0.43 0.012 270);
+    --fg-3: oklch(0.56 0.012 270);
+    --fg-4: oklch(0.68 0.01 270);
+    --invert: oklch(0.2 0.01 270);
+    --invert-ink: oklch(0.98 0.003 85);
+    --dot: oklch(0.22 0.01 270);
+    --glow: oklch(0.85 calc(var(--accent-c) * 1.4) var(--accent-h) / 0.35);
+    --tint: oklch(0.5 var(--accent-c) var(--accent-h));
+    --open: oklch(0.58 0.15 150);
+    --soon: oklch(0.62 0.13 75);
+    --closed: oklch(0.56 0.012 270);
+    --danger: oklch(0.56 0.19 25);
+    --highlight: inset 0 1px 0 oklch(1 0 0 / 0.7);
+    --shadow: 0 30px 60px -32px oklch(0.3 0.03 270 / 0.28), 0 2px 6px -2px oklch(0.3 0.02 270 / 0.08);
+    --grid-a: 0.07;
+    --diet-l: 0.6;
+    --diet-c: 0.13;
+    --co2-l: 0.6;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: oklch(0.975 0.005 85);
+  --bg-raised: oklch(0.995 0.002 85);
+  --panel: oklch(1 0 0 / 0.72);
+  --panel-solid: oklch(0.995 0.002 85);
+  --line: oklch(0.25 0.01 270 / 0.09);
+  --line-strong: oklch(0.25 0.01 270 / 0.17);
+  --fill: oklch(0.25 0.01 270 / 0.035);
+  --fill-2: oklch(0.25 0.01 270 / 0.06);
+  --fill-3: oklch(0.25 0.01 270 / 0.1);
+  --fg: oklch(0.2 0.01 270);
+  --fg-2: oklch(0.43 0.012 270);
+  --fg-3: oklch(0.56 0.012 270);
+  --fg-4: oklch(0.68 0.01 270);
+  --invert: oklch(0.2 0.01 270);
+  --invert-ink: oklch(0.98 0.003 85);
+  --dot: oklch(0.22 0.01 270);
+  --glow: oklch(0.85 calc(var(--accent-c) * 1.4) var(--accent-h) / 0.35);
+  --tint: oklch(0.5 var(--accent-c) var(--accent-h));
+  --open: oklch(0.58 0.15 150);
+  --soon: oklch(0.62 0.13 75);
+  --closed: oklch(0.56 0.012 270);
+  --danger: oklch(0.56 0.19 25);
+  --highlight: inset 0 1px 0 oklch(1 0 0 / 0.7);
+  --shadow: 0 30px 60px -32px oklch(0.3 0.03 270 / 0.28), 0 2px 6px -2px oklch(0.3 0.02 270 / 0.08);
+  --grid-a: 0.07;
+  --diet-l: 0.6;
+  --diet-c: 0.13;
+  --co2-l: 0.6;
+}
+
+/* One hue per kind of dish; the plates, dots and chips all draw from it. */
+[data-diet] {
+  --diet-h: 270;
+  --diet-chroma: 0;
+  --diet: oklch(var(--diet-l) var(--diet-chroma) var(--diet-h));
+  --diet-fill: oklch(var(--diet-l) var(--diet-chroma) var(--diet-h) / 0.14);
+}
+[data-diet='vegan'] { --diet-h: 150; --diet-chroma: var(--diet-c); }
+[data-diet='vegetarian'] { --diet-h: 118; --diet-chroma: var(--diet-c); }
+[data-diet='fish'] { --diet-h: 235; --diet-chroma: calc(var(--diet-c) * 0.9); }
+[data-diet='poultry'] { --diet-h: 80; --diet-chroma: calc(var(--diet-c) * 0.95); }
+[data-diet='beef'] { --diet-h: 28; --diet-chroma: var(--diet-c); }
+[data-diet='pork'] { --diet-h: 5; --diet-chroma: calc(var(--diet-c) * 0.85); }
+[data-diet='lamb'] { --diet-h: 330; --diet-chroma: calc(var(--diet-c) * 0.8); }
+[data-diet='game'] { --diet-h: 55; --diet-chroma: calc(var(--diet-c) * 0.6); }
+
+/* The CO₂ scale, A (light footprint) to E. */
+[data-co2] { --co2-h: 270; --co2-chroma: 0; --co2: oklch(var(--co2-l) var(--co2-chroma) var(--co2-h)); }
+[data-co2='A'] { --co2-h: 150; --co2-chroma: 0.14; }
+[data-co2='B'] { --co2-h: 125; --co2-chroma: 0.13; }
+[data-co2='C'] { --co2-h: 95; --co2-chroma: 0.13; }
+[data-co2='D'] { --co2-h: 60; --co2-chroma: 0.13; }
+[data-co2='E'] { --co2-h: 28; --co2-chroma: 0.15; }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  font-feature-settings: 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* The backdrop: a faint dot grid under a glow in the current outlet's colour. Fixed, and it
+   never reacts to scrolling. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 36rem at 50% -8rem, var(--glow), transparent 70%),
+    radial-gradient(circle at center, oklch(from var(--fg) l c h / var(--grid-a)) 1px, transparent 1.4px) 0 0 / 22px 22px;
+  mask-image: linear-gradient(to bottom, #000 0, #000 30rem, transparent 60rem);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 30rem, transparent 60rem);
+}
+
+/* See src/lib/scrolling.ts. */
+:root[data-scrolling] main {
+  pointer-events: none;
+}
+
+#app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+::selection {
+  background: oklch(from var(--fg) l c h / 0.18);
+  color: var(--fg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* --- Shared building blocks -------------------------------------------------------------------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--highlight), var(--shadow);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    transform 160ms var(--ease),
+    opacity 160ms var(--ease);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-ghost {
+  color: var(--fg-2);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--fill-2);
+  color: var(--fg);
+}
+.btn-soft {
+  background: var(--fill-2);
+  border: 1px solid var(--line);
+  color: var(--fg);
+}
+.btn-soft:hover:not(:disabled) {
+  background: var(--fill-3);
+}
+.btn-solid {
+  background: var(--invert);
+  color: var(--invert-ink);
+  font-weight: 600;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 999px;
+  color: var(--fg-2);
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+.icon-btn:hover {
+  background: var(--fill-2);
+  color: var(--fg);
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--fill-2);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--fill);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+/* Horizontal scrollers (outlets, days, filters) fade out at the edges instead of clipping. */
+.scroll-x {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--gutter);
+}
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--fill) 0%, var(--fill-3) 50%, var(--fill) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s var(--ease) infinite;
+  border-radius: 8px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

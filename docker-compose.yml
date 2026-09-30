@@ -1,0 +1,13 @@
+services:
+  cantina:
+    build: .
+    image: ghcr.io/ewolution94/cantina:latest
+    container_name: cantina
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - cantina-data:/data
+
+volumes:
+  cantina-data:
