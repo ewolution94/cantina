@@ -163,6 +163,6 @@ export const de: Record<MessageKey, string> = {
   'overview.full': 'Ganzer Plan',
   'overview.noMenu': 'An diesem Tag kein Plan',
   'settings.simple': 'Vereinfachte Ansicht',
-  'settings.simpleHint': 'Nur Gerichte und Preise: keine Fotos, Nährwerte oder CO₂. Alles andere zeigt ein Tipp aufs Gericht.',
+  'settings.simpleHint': 'Gerichte als Name und Preis: keine Gerichtfotos, Nährwerte oder CO₂. Alles andere zeigt ein Tipp aufs Gericht.',
   'time.justNow': 'gerade eben',
 };

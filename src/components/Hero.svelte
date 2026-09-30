@@ -3,11 +3,9 @@
   import { l, t, weekdayLong, weekdayShort } from '../lib/i18n/index.svelte';
   import { Halftone } from '../lib/halftone';
   import { app, outlet } from '../lib/state/app.svelte';
-  import { settings } from '../lib/state/settings.svelte';
   import { effectiveTheme } from '../lib/state/theme.svelte';
   import { addDays, formatSlots, outletStatus, statusTone, weekday, type Status } from '../lib/time';
 
-  // No canvas in the simplified view, so the halftone comes and goes with it.
   let canvas = $state<HTMLCanvasElement | undefined>();
   let halftone = $state<Halftone | null>(null);
 
@@ -89,12 +87,10 @@
   });
 </script>
 
-<section class="hero" class:simple={settings.simple} aria-labelledby="outlet-name">
-  {#if !settings.simple}
-    <div class="art">
-      <canvas bind:this={canvas} aria-hidden="true"></canvas>
-    </div>
-  {/if}
+<section class="hero" aria-labelledby="outlet-name">
+  <div class="art">
+    <canvas bind:this={canvas} aria-hidden="true"></canvas>
+  </div>
 
   {#if current}
     <div class="info">
@@ -153,11 +149,6 @@
   .info {
     position: relative;
     margin-top: -86px;
-  }
-  /* The simplified view: name, status and hours, no photo to sit on. */
-  .simple .info {
-    margin-top: 0;
-    padding-top: 18px;
   }
 
   .label {
@@ -295,10 +286,6 @@
     .info {
       margin-top: 34px;
       padding: 0 4px;
-    }
-    .simple .info {
-      margin-top: 0;
-      padding-top: 4px;
     }
   }
 </style>

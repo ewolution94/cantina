@@ -12,7 +12,7 @@ type Settings = {
   outlet: number | null;
   /** Where the app opens: the last outlet looked at, or always the same one (an outlet id; 0 is the Overview). */
   startOutlet: 'last' | number;
-  /** The simplified view: no photos or halftone, no nutrition or CO₂; dishes and prices. */
+  /** The simplified view: dishes as name and price, without dish photos, nutrition or CO₂. */
   simple: boolean;
   diet: DietFilter;
   noPork: boolean;

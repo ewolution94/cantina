@@ -164,7 +164,7 @@ export const en = {
   'overview.full': 'Full menu',
   'overview.noMenu': 'No menu on this day',
   'settings.simple': 'Simplified view',
-  'settings.simpleHint': 'Dishes and prices only: no photos, nutrition or CO₂. Tap a dish for everything else.',
+  'settings.simpleHint': 'Dishes as name and price: no dish photos, nutrition or CO₂. Tap a dish for everything else.',
   'time.justNow': 'just now',
 } as const;
 

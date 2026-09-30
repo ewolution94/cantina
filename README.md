@@ -4,7 +4,7 @@ The Kochwerk canteen menu (OTTO, Hamburg) as a fast, installable web app. It sho
 
 - **Outlets side by side:** Elbe, Bistro Boulevard, bonprix, Steelrunner and Kiosk, in a pill bar like Clinch's. On a phone it scrolls inside its frame, with chevrons wherever more outlets are hidden. The outlet's header shows whether it's open right now (Hamburg time) and its week's hours, with days that share hours folded into one line.
 - **Overview:** the first pill lists every outlet's menu for the selected day on one page, with just the outlet, each dish and its price, plus a link to that outlet's full menu. Filters apply, so Vegan here shows what's vegan anywhere today. On desktop the outlets sit side by side; `/overview` links straight to it.
-- **Simplified view (Settings):** no photos, halftone, nutrition or CO₂. Each dish is a diet dot, its name and its price, and the outlet header is its name, status and hours. Tapping a dish still opens everything.
+- **Simplified view (Settings):** no dish photos, nutrition or CO₂. Each dish is a diet dot, its name and its price. The outlet's plate stays. Tapping a dish still opens everything.
 - **Both weeks:** the day strip covers this week and next. On a phone you can swipe the menu left or right to change the day.
 - **Real photos when Kochwerk has them:** the kitchen photographs most dishes on the day. A dish without a photo gets a generated dot "plate" instead, coloured by what it is (vegan, fish, poultry …).
 - **Outlet photos in halftone:** the outlet photo is drawn as dots in its own muted colours, at the same 4.6 px pitch as the portrait on ewolution.cloud. Switching outlets morphs the dots, and the portrait's magnifier makes dots near the cursor swell and part.
