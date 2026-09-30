@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t, weekdayShort, formatDay } from '../lib/i18n/index.svelte';
-  import { app, dayList, sectionsFor, setDate } from '../lib/state/app.svelte';
+  import { app, dayList, isOverview, sectionsFor, setDate } from '../lib/state/app.svelte';
   import { isoWeek, weekday } from '../lib/time';
 
   const days = $derived(dayList(app.doc));
@@ -32,7 +32,7 @@
   {#each days as day, i (day)}
     {@const selected = day === app.date}
     {@const today = day === app.now.date}
-    {@const empty = !sectionsFor(app.outletId, day).length}
+    {@const empty = isOverview() ? !app.doc?.days.includes(day) : !sectionsFor(app.outletId, day).length}
     {#if i === 0 || weekday(day) === 0}
       <span class="week" aria-hidden="true">{t('days.week', { n: isoWeek(day) })}</span>
     {/if}

@@ -66,6 +66,7 @@
           ]}
         />
       </div>
+      <Toggle bind:checked={settings.simple} label={t('settings.simple')} hint={t('settings.simpleHint')} />
       <label class="row">
         <span class="text">
           <span class="name">{t('settings.start')}</span>
@@ -80,6 +81,7 @@
           }}
         >
           <option value="last">{t('settings.startLast')}</option>
+          <option value="0">{t('overview.tab')}</option>
           {#each app.doc?.outlets ?? [] as outlet (outlet.id)}
             <option value={String(outlet.id)}>{shortName(outlet.name)}</option>
           {/each}

@@ -10,8 +10,10 @@ type Settings = {
   language: Language;
   /** Last outlet looked at. */
   outlet: number | null;
-  /** Where the app opens: the last outlet looked at, or always the same one (an outlet id). */
+  /** Where the app opens: the last outlet looked at, or always the same one (an outlet id; 0 is the Overview). */
   startOutlet: 'last' | number;
+  /** The simplified view: no photos or halftone, no nutrition or CO₂; dishes and prices. */
+  simple: boolean;
   diet: DietFilter;
   noPork: boolean;
   /** Allergen codes (A, H, K …) to steer clear of. */
@@ -33,6 +35,7 @@ const DEFAULTS: Settings = {
   language: 'system',
   outlet: null,
   startOutlet: 'last',
+  simple: false,
   diet: 'all',
   noPork: false,
   avoid: [],

@@ -8,9 +8,10 @@
   import { formatDay, l, t, tn, weekdayLong } from '../lib/i18n/index.svelte';
   import { fit } from '../lib/data/labels';
   import type { Dish, Section } from '../lib/data/types';
-  import { app, assortmentsFor, dayList, openDish, outlet, sectionsFor, setDate, setOutlet, shortName, stepDay } from '../lib/state/app.svelte';
+  import { app, assortmentsFor, dayList, isOverview, openDish, outlet, sectionsFor, setDate, setOutlet, shortName, stepDay } from '../lib/state/app.svelte';
   import { favoriteKey, settings } from '../lib/state/settings.svelte';
   import DishRow from './DishRow.svelte';
+  import Overview from './Overview.svelte';
   import Plate from './Plate.svelte';
 
   const sections = $derived(sectionsFor(app.outletId, app.date));
@@ -24,6 +25,7 @@
   let lastOutlet = -1;
   $effect.pre(() => {
     const outlets = app.doc?.outlets ?? [];
+    // The Overview pill sits left of every outlet (index -1).
     const outletIndex = outlets.findIndex((o) => o.id === app.outletId);
     const lastIndex = outlets.findIndex((o) => o.id === lastOutlet);
     if (lastDate && app.date !== lastDate) direction = app.date > lastDate ? 1 : -1;
@@ -100,7 +102,10 @@
 
 <div class="menu-wrap" bind:this={wrap}>
   {#key `${app.outletId}:${app.date}`}
-    <div class="menu" in:fly={{ x: direction * 32, duration: direction ? 380 : 0, easing: cubicOut, opacity: 0 }}>
+    <div class="menu" class:simple={settings.simple} in:fly={{ x: direction * 32, duration: direction ? 380 : 0, easing: cubicOut, opacity: 0 }}>
+      {#if isOverview()}
+        <Overview />
+      {:else}
       {#each favoritesElsewhere as group (group.outlet.id)}
         <div class="fav-hint">
           <Heart size={14} fill="currentColor" />
@@ -179,6 +184,7 @@
           </div>
         </details>
       {/each}
+      {/if}
     </div>
   {/key}
 </div>
@@ -231,6 +237,9 @@
     color: var(--fg-4);
   }
 
+  .menu.simple {
+    gap: 20px;
+  }
   .station-head {
     display: flex;
     align-items: baseline;

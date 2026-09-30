@@ -3,6 +3,8 @@
 The Kochwerk canteen menu (OTTO, Hamburg) as a fast, installable web app. It shows every outlet and every day, in German and English. The data is the same as on [kochwerk-web.webspeiseplan.de](https://kochwerk-web.webspeiseplan.de/menu); only the Speiseplan is shown.
 
 - **Outlets side by side:** Elbe, Bistro Boulevard, bonprix, Steelrunner and Kiosk, in a pill bar like Clinch's. On a phone it scrolls inside its frame, with chevrons wherever more outlets are hidden. The outlet's header shows whether it's open right now (Hamburg time) and its week's hours, with days that share hours folded into one line.
+- **Overview:** the first pill lists every outlet's menu for the selected day on one page, with just the outlet, each dish and its price, plus a link to that outlet's full menu. Filters apply, so Vegan here shows what's vegan anywhere today. On desktop the outlets sit side by side; `/overview` links straight to it.
+- **Simplified view (Settings):** no photos, halftone, nutrition or CO₂. Each dish is a diet dot, its name and its price, and the outlet header is its name, status and hours. Tapping a dish still opens everything.
 - **Both weeks:** the day strip covers this week and next. On a phone you can swipe the menu left or right to change the day.
 - **Real photos when Kochwerk has them:** the kitchen photographs most dishes on the day. A dish without a photo gets a generated dot "plate" instead, coloured by what it is (vegan, fish, poultry …).
 - **Outlet photos in halftone:** the outlet photo is drawn as dots in its own muted colours, at the same 4.6 px pitch as the portrait on ewolution.cloud. Switching outlets morphs the dots, and the portrait's magnifier makes dots near the cursor swell and part.
@@ -10,12 +12,12 @@ The Kochwerk canteen menu (OTTO, Hamburg) as a fast, installable web app. It sho
 - **Filters:** vegetarian and vegan sit right above the menu. No pork, allergens to avoid, and hide instead of dim live in Settings, where the menu's Filter button opens them. Dishes that don't fit are dimmed, with the reason shown ("Contains milk"), and the top of the menu says how many.
 - **Search (⌘K or `/`):** searches every dish at every outlet across both weeks. It also lists your favourites that are coming up.
 - **Favourites:** a saved dish is marked whenever it's back on the menu. The heart in the header lists every favourite with its next day and outlet, and gets a dot when one is on today. Optionally, the menu points out a favourite that's on at another outlet the same day.
-- **Settings (⌘,):** language, theme, the outlet to open on (the last one visited by default, as in Clinch), the filters, and the favourites hint.
+- **Settings (⌘,):** the simplified view, language, theme, where to open (the last outlet or Overview visited by default, as in Clinch), the filters, and the favourites hint.
 - **Shareable links:** `/elbe/2026-10-01?dish=248749` opens exactly that dish. The back button closes an open dish.
 - **English and German:** the app follows the browser's language until you pick one in Settings. Light and dark follow the system the same way. Prices read "5,80€" / "5.80€", with the euro sign after the amount in both languages.
 - **Installs to a home screen:** it opens instantly and shows the last menu it saw when there's no signal.
 
-Keyboard: `←`/`→` change the day, `1`–`5` pick an outlet, `t` jumps to today, `f` opens the filters, `,` or `⌘,` opens Settings, `d` switches the theme, and `⌘K` or `/` opens search.
+Keyboard: `←`/`→` change the day, `0` opens the Overview, `1`–`5` pick an outlet, `t` jumps to today, `f` opens the filters, `,` or `⌘,` opens Settings, `d` switches the theme, and `⌘K` or `/` opens search.
 
 ## How it works
 

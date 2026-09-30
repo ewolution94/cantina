@@ -4,13 +4,15 @@
   import { dietName, fit } from '../lib/data/labels';
   import type { Dish } from '../lib/data/types';
   import { app, openDish } from '../lib/state/app.svelte';
-  import { isFavorite } from '../lib/state/settings.svelte';
+  import { isFavorite, settings } from '../lib/state/settings.svelte';
   import Plate from './Plate.svelte';
 
   let { dish, compact = false, index = 0 }: { dish: Dish; compact?: boolean; index?: number } = $props();
 
   const fits = $derived(fit(dish, app.doc));
   const favorite = $derived(isFavorite(dish.name.de));
+  /** The simplified view (Settings): a diet dot, the name and the price; the sheet has the rest. */
+  const simple = $derived(settings.simple);
   let imageFailed = $state(false);
   let imageLoaded = $state(false);
 </script>
@@ -18,13 +20,14 @@
 <button
   class="dish"
   class:compact
+  class:simple
   class:dim={!fits.ok}
   class:favorite
   data-diet={dish.diet ?? 'none'}
   style:--n={index}
   onclick={() => openDish(dish.id)}
 >
-  <span class="media">
+  {#if !simple}<span class="media">
     {#if dish.image && !imageFailed && !compact}
       <img
         src={dish.thumb ?? dish.image}
@@ -43,14 +46,16 @@
     {:else}
       <Plate name={dish.name.de} diet={dish.diet} size={compact ? 40 : 64} />
     {/if}
-  </span>
+  </span>{/if}
 
   <span class="body">
-    <span class="name">{l(dish.name)}</span>
-    {#if l(dish.note)}
+    <span class="name">
+      {#if simple}<i class="dot" aria-hidden="true"></i>{/if}{l(dish.name)}{#if simple && favorite}<span class="fav inline" aria-hidden="true"><Heart size={11} fill="currentColor" /></span>{/if}
+    </span>
+    {#if l(dish.note) && !simple}
       <span class="note">{l(dish.note)}</span>
     {/if}
-    {#if !compact}
+    {#if !compact && !simple}
       <span class="meta">
         {#if dish.diet}
           <span class="diet"><i aria-hidden="true"></i>{dietName(dish.diet)}</span>
@@ -66,7 +71,7 @@
         {/if}
       </span>
     {/if}
-    {#if !fits.ok}
+    {#if !fits.ok && !simple}
       <span class="why">{fits.reasons.join(' · ')}</span>
     {/if}
   </span>
@@ -249,6 +254,36 @@
     gap: 14px;
     padding: 9px 12px;
   }
+
+  .simple {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    padding-block: 11px;
+  }
+  /* Hanging indent: a wrapped name lines up under its first word, not under the dot. */
+  .simple .name {
+    font-weight: 450;
+    padding-left: 18px;
+    text-indent: -18px;
+  }
+  .simple .price {
+    padding: 0;
+    color: var(--fg-2);
+  }
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin: 0 10px 0 1px;
+    text-indent: 0;
+    border-radius: 50%;
+    background: var(--diet);
+    vertical-align: 0.12em;
+  }
+  .fav.inline {
+    margin-left: 8px;
+    vertical-align: -0.05em;
+  }
   .compact .media {
     width: 42px;
     height: 42px;
@@ -279,6 +314,9 @@
       padding: 16px 16px;
       margin: 0 -16px;
       width: calc(100% + 32px);
+    }
+    .simple {
+      padding-block: 12px;
     }
   }
 </style>

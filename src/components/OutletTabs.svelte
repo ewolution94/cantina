@@ -1,12 +1,16 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { t } from '../lib/i18n/index.svelte';
-  import { app, setOutlet, shortName } from '../lib/state/app.svelte';
+  import { app, OVERVIEW, setOutlet, shortName } from '../lib/state/app.svelte';
 
   // The outlet switch, built like Clinch's view nav: a framed pill bar whose labels scroll inside
   // the frame on narrow screens.
 
-  const outlets = $derived(app.doc?.outlets ?? []);
+  /** The Overview first, then every outlet. */
+  const items = $derived([
+    { id: OVERVIEW, label: t('overview.tab'), title: t('overview.label') },
+    ...(app.doc?.outlets ?? []).map((o) => ({ id: o.id, label: shortName(o.name), title: o.name })),
+  ]);
   let tabs: HTMLButtonElement[] = $state([]);
   let scroller: HTMLDivElement;
   let pill = $state({ x: 0, w: 0 });
@@ -33,7 +37,7 @@
   });
 
   function measure() {
-    const tab = tabs[outlets.findIndex((o) => o.id === app.outletId)];
+    const tab = tabs[items.findIndex((o) => o.id === app.outletId)];
     if (!tab) return;
     pill = { x: tab.offsetLeft, w: tab.offsetWidth };
     updateEdges();
@@ -46,7 +50,7 @@
    * the palette, the number keys) with the pill off the edge of a phone.
    */
   function reveal() {
-    const tab = tabs[outlets.findIndex((o) => o.id === app.outletId)];
+    const tab = tabs[items.findIndex((o) => o.id === app.outletId)];
     if (!tab) return;
     const left = tab.offsetLeft;
     const right = left + tab.offsetWidth;
@@ -67,7 +71,8 @@
 
   $effect(() => {
     void app.outletId;
-    void outlets.length;
+    void items.length;
+    void items[0].label;
     void document.fonts?.ready.then(measure);
     // measure() reads the state it writes; only the selection should re-run this.
     untrack(() => {
@@ -79,10 +84,10 @@
   function onkeydown(event: KeyboardEvent) {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
-    const index = outlets.findIndex((o) => o.id === app.outletId);
-    const next = outlets[(index + (event.key === 'ArrowRight' ? 1 : -1) + outlets.length) % outlets.length];
+    const index = items.findIndex((o) => o.id === app.outletId);
+    const next = items[(index + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length];
     setOutlet(next.id);
-    tabs[outlets.indexOf(next)]?.focus();
+    tabs[items.indexOf(next)]?.focus();
   }
 </script>
 
@@ -103,17 +108,17 @@
     {onkeydown}
   >
     <span class="pill" class:ready style:--x="{pill.x}px" style:--w="{pill.w}px" aria-hidden="true"></span>
-    {#each outlets as outlet, i (outlet.id)}
+    {#each items as item, i (item.id)}
       <button
         bind:this={tabs[i]}
         class="tab"
         role="tab"
-        aria-selected={outlet.id === app.outletId}
-        tabindex={outlet.id === app.outletId ? 0 : -1}
-        title={outlet.name}
-        onclick={() => setOutlet(outlet.id)}
+        aria-selected={item.id === app.outletId}
+        tabindex={item.id === app.outletId ? 0 : -1}
+        title={item.title}
+        onclick={() => setOutlet(item.id)}
       >
-        {shortName(outlet.name)}
+        {item.label}
       </button>
     {/each}
   </div>

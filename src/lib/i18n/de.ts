@@ -158,5 +158,11 @@ export const de: Record<MessageKey, string> = {
 
   'filter.button': 'Filter',
 
+  'overview.tab': 'Übersicht',
+  'overview.label': 'Alle Standorte',
+  'overview.full': 'Ganzer Plan',
+  'overview.noMenu': 'An diesem Tag kein Plan',
+  'settings.simple': 'Vereinfachte Ansicht',
+  'settings.simpleHint': 'Nur Gerichte und Preise: keine Fotos, Nährwerte oder CO₂. Alles andere zeigt ein Tipp aufs Gericht.',
   'time.justNow': 'gerade eben',
 };

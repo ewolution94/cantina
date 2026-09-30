@@ -7,6 +7,15 @@ import { addDays, berlinNow, weekday, type Now } from '../time';
 import { settings } from './settings.svelte';
 
 const CACHE_KEY = 'cantina:menu';
+
+/**
+ * The "outlet" id of the Overview tab (every outlet's menu in one list). No real outlet has id 0,
+ * so it can live wherever an outlet id does: the selection, the URL, the saved start outlet.
+ */
+export const OVERVIEW = 0;
+const OVERVIEW_SLUG = 'overview';
+
+export const isOverview = () => app.outletId === OVERVIEW;
 /** Refetch when the tab comes back after this long. */
 const REFRESH_AFTER = 10 * 60_000;
 
@@ -74,7 +83,7 @@ function adopt(doc: MenuDoc) {
   app.doc = doc;
   app.status = 'ready';
   if (first) fromUrl();
-  else if (!doc.outlets.some((o) => o.id === app.outletId)) app.outletId = defaultOutlet(doc);
+  else if (app.outletId !== OVERVIEW && !doc.outlets.some((o) => o.id === app.outletId)) app.outletId = defaultOutlet(doc);
 }
 
 addEventListener('visibilitychange', () => {
@@ -109,6 +118,7 @@ export const outletSlug = (outlet: Outlet) =>
 /** The outlet the app opens on: the one set in Settings, else the last one looked at. */
 function defaultOutlet(doc: MenuDoc): number | null {
   const wanted = settings.startOutlet === 'last' ? settings.outlet : settings.startOutlet;
+  if (wanted === OVERVIEW) return OVERVIEW;
   const found = doc.outlets.find((o) => o.id === wanted);
   return (found ?? doc.outlets[0])?.id ?? null;
 }
@@ -176,8 +186,8 @@ function fromUrl() {
   const doc = app.doc;
   if (!doc) return;
   const [slug, date] = location.pathname.split('/').filter(Boolean);
-  const fromSlug = doc.outlets.find((o) => outletSlug(o) === slug);
-  app.outletId = fromSlug?.id ?? defaultOutlet(doc);
+  const fromSlug = slug === OVERVIEW_SLUG ? OVERVIEW : doc.outlets.find((o) => outletSlug(o) === slug)?.id;
+  app.outletId = fromSlug ?? defaultOutlet(doc);
   app.date = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : defaultDate(doc);
   const dish = Number(new URLSearchParams(location.search).get('dish'));
   app.dishId = dish > 0 ? dish : null;
@@ -187,9 +197,10 @@ function fromUrl() {
 
 function path(): string {
   const current = outlet();
-  if (!current) return '/';
+  const slug = isOverview() ? OVERVIEW_SLUG : current ? outletSlug(current) : null;
+  if (!slug) return '/';
   const date = app.date === defaultDate(app.doc) ? '' : `/${app.date}`;
-  return `/${outletSlug(current)}${date}${app.dishId ? `?dish=${app.dishId}` : ''}`;
+  return `/${slug}${date}${app.dishId ? `?dish=${app.dishId}` : ''}`;
 }
 
 function toUrl(replace = true) {

@@ -3,11 +3,13 @@
   import { l, t, weekdayLong, weekdayShort } from '../lib/i18n/index.svelte';
   import { Halftone } from '../lib/halftone';
   import { app, outlet } from '../lib/state/app.svelte';
+  import { settings } from '../lib/state/settings.svelte';
   import { effectiveTheme } from '../lib/state/theme.svelte';
   import { addDays, formatSlots, outletStatus, statusTone, weekday, type Status } from '../lib/time';
 
-  let canvas: HTMLCanvasElement;
-  let halftone: Halftone | null = null;
+  // No canvas in the simplified view, so the halftone comes and goes with it.
+  let canvas = $state<HTMLCanvasElement | undefined>();
+  let halftone = $state<Halftone | null>(null);
 
   const current = $derived(outlet());
   const isToday = $derived(app.date === app.now.date);
@@ -53,22 +55,26 @@
     return slots.length ? formatSlots(slots) : t('hours.closed');
   }
 
+  const tint = (h: number, c: number) => {
+    const root = document.documentElement.style;
+    root.setProperty('--accent-h', String(h));
+    root.setProperty('--accent-c', String(c));
+  };
+
   $effect(() => {
+    if (!canvas) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    halftone = new Halftone(canvas, {
-      onTint: (tint) => {
-        const root = document.documentElement.style;
-        root.setProperty('--accent-h', String(tint?.h ?? 250));
-        root.setProperty('--accent-c', String(tint?.c ?? 0.02));
-      },
-    });
-    halftone.setReducedMotion(reduced.matches);
-    const onchange = () => halftone?.setReducedMotion(reduced.matches);
+    const instance = new Halftone(canvas, { onTint: (t) => tint(t?.h ?? 250, t?.c ?? 0.02) });
+    instance.setReducedMotion(reduced.matches);
+    const onchange = () => instance.setReducedMotion(reduced.matches);
     reduced.addEventListener('change', onchange);
+    halftone = instance;
     return () => {
       reduced.removeEventListener('change', onchange);
-      halftone?.destroy();
+      instance.destroy();
       halftone = null;
+      // Without the photo there's no colour to borrow: back to the neutral glow.
+      tint(250, 0.02);
     };
   });
 
@@ -83,10 +89,12 @@
   });
 </script>
 
-<section class="hero" aria-labelledby="outlet-name">
-  <div class="art">
-    <canvas bind:this={canvas} aria-hidden="true"></canvas>
-  </div>
+<section class="hero" class:simple={settings.simple} aria-labelledby="outlet-name">
+  {#if !settings.simple}
+    <div class="art">
+      <canvas bind:this={canvas} aria-hidden="true"></canvas>
+    </div>
+  {/if}
 
   {#if current}
     <div class="info">
@@ -145,6 +153,11 @@
   .info {
     position: relative;
     margin-top: -86px;
+  }
+  /* The simplified view: name, status and hours, no photo to sit on. */
+  .simple .info {
+    margin-top: 0;
+    padding-top: 18px;
   }
 
   .label {
@@ -282,6 +295,10 @@
     .info {
       margin-top: 34px;
       padding: 0 4px;
+    }
+    .simple .info {
+      margin-top: 0;
+      padding-top: 4px;
     }
   }
 </style>

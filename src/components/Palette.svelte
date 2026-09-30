@@ -10,7 +10,7 @@
   import Settings2 from '@lucide/svelte/icons/settings-2';
   import { formatPrice, formatShortDate, l, locale, setLocale, t, weekdayShort } from '../lib/i18n/index.svelte';
   import type { Dish, Section } from '../lib/data/types';
-  import { app, defaultDate, dayList, openDish, setDate, setOutlet, shortName } from '../lib/state/app.svelte';
+  import { app, defaultDate, dayList, openDish, OVERVIEW, setDate, setOutlet, shortName } from '../lib/state/app.svelte';
   import { favoriteKey, settings } from '../lib/state/settings.svelte';
   import { toggleTheme } from '../lib/state/theme.svelte';
   import { addDays } from '../lib/time';
@@ -108,6 +108,7 @@
       { kind: 'action', id: 'today', label: t('common.today'), sub: weekdayShort(today) + ' ' + formatShortDate(today), icon: CalendarDays, run: () => setDate(today) },
     ];
     if (tomorrow) out.push({ kind: 'action', id: 'tomorrow', label: tomorrow === addDays(today, 1) ? t('common.tomorrow') : weekdayShort(tomorrow), sub: formatShortDate(tomorrow), icon: CalendarDays, run: () => setDate(tomorrow) });
+    out.push({ kind: 'action', id: 'outlet-overview', label: t('overview.tab'), sub: t('overview.label'), icon: MapPin, run: () => setOutlet(OVERVIEW) });
     for (const outlet of doc.outlets) {
       out.push({ kind: 'action', id: `outlet-${outlet.id}`, label: outlet.name, icon: MapPin, run: () => setOutlet(outlet.id) });
     }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { app, sectionsFor } from '../lib/state/app.svelte';
+  import { app, isOverview, sectionsFor } from '../lib/state/app.svelte';
   import { filtersActive, settings, type DietFilter } from '../lib/state/settings.svelte';
 
   const options: { value: DietFilter; key: 'filter.all' | 'filter.vegetarian' | 'filter.vegan' }[] = [
@@ -10,7 +10,12 @@
     { value: 'vegan', key: 'filter.vegan' },
   ];
 
-  const total = $derived(sectionsFor(app.outletId, app.date).reduce((n, s) => n + s.dishes.length, 0));
+  const total = $derived(
+    (isOverview() ? (app.doc?.outlets ?? []).map((o) => o.id) : [app.outletId]).reduce<number>(
+      (n, id) => n + sectionsFor(id, app.date).reduce((m, s) => m + s.dishes.length, 0),
+      0,
+    ),
+  );
   const active = $derived(filtersActive());
 </script>
 

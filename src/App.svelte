@@ -1,7 +1,7 @@
 <script lang="ts">
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import { formatDay, t } from './lib/i18n/index.svelte';
-  import { app, defaultDate, load, setDate, setOutlet, stepDay } from './lib/state/app.svelte';
+  import { app, defaultDate, isOverview, load, OVERVIEW, setDate, setOutlet, stepDay } from './lib/state/app.svelte';
   import { toggleTheme } from './lib/state/theme.svelte';
   import DayStrip from './components/DayStrip.svelte';
   import DishSheet from './components/DishSheet.svelte';
@@ -40,6 +40,8 @@
     } else if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       if ((event.target as HTMLElement)?.closest?.('[role="tablist"]')) return;
       stepDay(event.key === 'ArrowRight' ? 1 : -1);
+    } else if (event.key === '0') {
+      setOutlet(OVERVIEW);
     } else if (/^[1-9]$/.test(event.key)) {
       const outlet = app.doc?.outlets[Number(event.key) - 1];
       if (outlet) setOutlet(outlet.id);
@@ -60,14 +62,16 @@
 <Header />
 
 {#if app.doc}
-  <main class="shell">
+  <main class="shell" class:wide={isOverview()}>
     <div class="mobile-outlets">
       <OutletTabs />
     </div>
 
-    <aside class="side">
-      <Hero />
-    </aside>
+    {#if !isOverview()}
+      <aside class="side">
+        <Hero />
+      </aside>
+    {/if}
 
     <section class="content" aria-label={formatDay(app.date)}>
       <div class="days">
@@ -164,6 +168,10 @@
     .side {
       position: sticky;
       top: calc(var(--bar-h) + 20px);
+    }
+    /* The Overview has no outlet column: the list takes the page. */
+    .shell.wide {
+      grid-template-columns: minmax(0, 1fr);
     }
     .days {
       margin: 0;

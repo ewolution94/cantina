@@ -159,6 +159,12 @@ export const en = {
 
   'filter.button': 'Filter',
 
+  'overview.tab': 'Overview',
+  'overview.label': 'Every outlet',
+  'overview.full': 'Full menu',
+  'overview.noMenu': 'No menu on this day',
+  'settings.simple': 'Simplified view',
+  'settings.simpleHint': 'Dishes and prices only: no photos, nutrition or CO₂. Tap a dish for everything else.',
   'time.justNow': 'just now',
 } as const;
 
