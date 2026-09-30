@@ -256,21 +256,31 @@
 
   /* Desktop: the hero is the sticky left column; the photo gets room and the hours stay open. */
   @media (min-width: 1000px) {
+    /* A plate: the photo is the food, cut to a circle, with a quiet rim around it (the dish
+       plates in the list use the same rim and line colours). */
     .art {
       height: auto;
-      aspect-ratio: 1 / 1.02;
-      margin: 0 -12px;
+      aspect-ratio: 1;
+      margin: 12px 14px 0;
+      overflow: visible;
+      isolation: isolate;
     }
-    /* No frame: the photo dissolves into the page at its edges, most of all at the bottom
-       where the name sits, and stays whole in between. */
+    .art::before {
+      content: '';
+      position: absolute;
+      inset: -5%;
+      z-index: -1;
+      border-radius: 50%;
+      background: var(--fill);
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 40px 70px -40px oklch(0 0 0 / 0.55);
+    }
     canvas {
-      mask-image:
-        linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
-        linear-gradient(to bottom, transparent, #000 16%, #000 56%, transparent 94%);
-      mask-composite: intersect;
+      border-radius: 50%;
+      mask-image: radial-gradient(circle closest-side, #000 86%, transparent 100%);
     }
     .info {
-      margin-top: -64px;
+      margin-top: 34px;
       padding: 0 4px;
     }
   }
