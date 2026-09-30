@@ -15,10 +15,10 @@ services:
     container_name: cantina
     restart: unless-stopped
     ports:
-      # Next to Fermata (4800). Change both numbers if 4900 is taken on the NAS.
-      - "4900:4900"
+      # 4900 and 4901 belong to Census. Change both numbers if 5200 is taken on the NAS.
+      - "5200:5200"
     environment:
-      - PORT=4900
+      - PORT=5200
       - TZ=Europe/Berlin
       # Defaults are right for OTTO Kochwerk; only here to make them easy to find.
       # - CANTINA_LOCATION=1800

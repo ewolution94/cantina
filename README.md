@@ -78,7 +78,7 @@ This mirrors Fermata and Clinch:
 - `ci.yml` runs the typecheck, the tests and the build, then smoke-tests the production server. That includes checking that the photo proxy refuses other paths.
 - `docker-publish.yml` gates on `ci.yml`, then pushes `ghcr.io/ewolution94/cantina:latest` for amd64 and arm64.
 - The shared Watchtower picks the image up. With this setup, a push to `release` is the whole deploy.
-- The NAS runs `deploy/portainer-stack.yml`, on port **4900** by default.
+- The NAS runs `deploy/portainer-stack.yml`, on port **5200** by default.
 - Make the GHCR package public, so that Watchtower can pull it anonymously.
 
 | Variable | Default | Purpose |
