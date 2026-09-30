@@ -64,8 +64,12 @@ export function l(value: { de: string; en: string } | null | undefined): string 
 
 // --- Locale-aware formatting --------------------------------------------------------------------
 
+/**
+ * "5,80€" / "5.80€": the euro sign after the amount and tight to it in both languages, the way
+ * Kochwerk's own tills print it (plenty of German readers use the English interface).
+ */
 export function formatPrice(value: number): string {
-  return new Intl.NumberFormat(locale() === 'de' ? 'de-DE' : 'en-IE', { style: 'currency', currency: 'EUR' }).format(value);
+  return `${formatNumber(value, 2)}€`;
 }
 
 export function formatPercent(ratio: number): string {

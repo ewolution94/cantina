@@ -7,6 +7,7 @@
   import Languages from '@lucide/svelte/icons/languages';
   import SunMoon from '@lucide/svelte/icons/sun-moon';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+  import Settings2 from '@lucide/svelte/icons/settings-2';
   import { formatPrice, formatShortDate, l, locale, setLocale, t, weekdayShort } from '../lib/i18n/index.svelte';
   import type { Dish, Section } from '../lib/data/types';
   import { app, defaultDate, dayList, openDish, setDate, setOutlet, shortName } from '../lib/state/app.svelte';
@@ -111,7 +112,9 @@
       out.push({ kind: 'action', id: `outlet-${outlet.id}`, label: outlet.name, icon: MapPin, run: () => setOutlet(outlet.id) });
     }
     out.push(
-      { kind: 'action', id: 'filters', label: t('filter.allergens'), icon: SlidersHorizontal, run: () => (app.filters = true) },
+      { kind: 'action', id: 'favorites', label: t('favorites.title'), icon: Heart, run: () => (app.favorites = true) },
+      { kind: 'action', id: 'filters', label: t('settings.filters'), icon: SlidersHorizontal, run: () => (app.settings = 'filters') },
+      { kind: 'action', id: 'settings', label: t('settings.title'), icon: Settings2, run: () => (app.settings = 'general') },
       { kind: 'action', id: 'lang', label: t('common.switchLanguage'), icon: Languages, run: () => setLocale(locale() === 'de' ? 'en' : 'de') },
       { kind: 'action', id: 'theme', label: t('common.theme'), icon: SunMoon, run: toggleTheme },
     );

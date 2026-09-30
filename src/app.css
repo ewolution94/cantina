@@ -199,8 +199,10 @@ body::before {
 }
 
 /* See src/lib/scrolling.ts. */
-:root[data-scrolling] main {
-  pointer-events: none;
+@media (hover: hover) and (pointer: fine) {
+  :root[data-scrolling] main {
+    pointer-events: none;
+  }
 }
 
 #app {

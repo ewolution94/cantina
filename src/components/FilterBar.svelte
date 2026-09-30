@@ -1,9 +1,8 @@
 <script lang="ts">
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { allergenName } from '../lib/data/labels';
   import { app, sectionsFor } from '../lib/state/app.svelte';
-  import { settings, type DietFilter } from '../lib/state/settings.svelte';
+  import { filtersActive, settings, type DietFilter } from '../lib/state/settings.svelte';
 
   const options: { value: DietFilter; key: 'filter.all' | 'filter.vegetarian' | 'filter.vegan' }[] = [
     { value: 'all', key: 'filter.all' },
@@ -12,7 +11,7 @@
   ];
 
   const total = $derived(sectionsFor(app.outletId, app.date).reduce((n, s) => n + s.dishes.length, 0));
-  const avoidLabel = $derived(settings.avoid.length ? settings.avoid.map((code) => allergenName(code, app.doc)).join(', ') : t('filter.allergens'));
+  const active = $derived(filtersActive());
 </script>
 
 <div class="bar">
@@ -31,10 +30,11 @@
         </button>
       {/each}
     </div>
-    <button class="toggle" aria-pressed={settings.noPork} onclick={() => (settings.noPork = !settings.noPork)}>{t('filter.noPork')}</button>
-    <button class="toggle more" aria-pressed={settings.avoid.length > 0} onclick={() => (app.filters = true)}>
+    <!-- Allergens, no pork and hide-or-dim live in Settings; this opens it right there. -->
+    <button class="toggle" class:on={active > 0} onclick={() => (app.settings = 'filters')}>
       <SlidersHorizontal size={14} />
-      <span class="avoid">{avoidLabel}</span>
+      {t('filter.button')}
+      {#if active}<span class="badge tabular">{active}</span>{/if}
     </button>
   </div>
   {#if total}
@@ -117,14 +117,21 @@
     color: var(--fg);
     border-color: var(--line-strong);
   }
-  .toggle[aria-pressed='true'] {
-    background: var(--invert);
-    border-color: transparent;
-    color: var(--invert-ink);
+  .toggle.on {
+    border-color: var(--line-strong);
+    color: var(--fg);
   }
-  .avoid {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--invert);
+    color: var(--invert-ink);
+    font-size: 11px;
+    font-weight: 600;
   }
 
   .count {

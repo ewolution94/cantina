@@ -22,7 +22,9 @@ export const app = $state({
   date: '',
   dishId: null as number | null,
   palette: false,
-  filters: false,
+  /** Settings open, and at which section. */
+  settings: false as false | 'general' | 'filters',
+  favorites: false,
   now: berlinNow(),
 });
 
@@ -104,9 +106,11 @@ export const outletSlug = (outlet: Outlet) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+/** The outlet the app opens on: the one set in Settings, else the last one looked at. */
 function defaultOutlet(doc: MenuDoc): number | null {
-  const saved = doc.outlets.find((o) => o.id === settings.outlet);
-  return (saved ?? doc.outlets[0])?.id ?? null;
+  const wanted = settings.startOutlet === 'last' ? settings.outlet : settings.startOutlet;
+  const found = doc.outlets.find((o) => o.id === wanted);
+  return (found ?? doc.outlets[0])?.id ?? null;
 }
 
 /** Today on a weekday; the coming Monday at the weekend. */

@@ -6,7 +6,7 @@
   import DayStrip from './components/DayStrip.svelte';
   import DishSheet from './components/DishSheet.svelte';
   import FilterBar from './components/FilterBar.svelte';
-  import Filters from './components/Filters.svelte';
+  import Favorites from './components/Favorites.svelte';
   import Footer from './components/Footer.svelte';
   import Header from './components/Header.svelte';
   import Hero from './components/Hero.svelte';
@@ -14,6 +14,7 @@
   import Menu from './components/Menu.svelte';
   import OutletTabs from './components/OutletTabs.svelte';
   import Palette from './components/Palette.svelte';
+  import Settings from './components/Settings.svelte';
   import Toasts from './components/Toasts.svelte';
 
   void load();
@@ -24,6 +25,11 @@
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       app.palette = !app.palette;
+      return;
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key === ',') {
+      event.preventDefault();
+      app.settings = 'general';
       return;
     }
     if (event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) return;
@@ -40,7 +46,9 @@
     } else if (event.key === 't') {
       setDate(defaultDate(app.doc));
     } else if (event.key === 'f') {
-      app.filters = true;
+      app.settings = 'filters';
+    } else if (event.key === ',') {
+      app.settings = 'general';
     } else if (event.key === 'd') {
       toggleTheme();
     }
@@ -54,7 +62,7 @@
 {#if app.doc}
   <main class="shell">
     <div class="mobile-outlets">
-      <OutletTabs variant="row" />
+      <OutletTabs />
     </div>
 
     <aside class="side">
@@ -88,7 +96,8 @@
 
 <Footer />
 <DishSheet />
-<Filters />
+<Settings />
+<Favorites />
 <Palette />
 <Toasts />
 
@@ -103,7 +112,7 @@
   }
 
   .mobile-outlets {
-    margin: 4px calc(var(--gutter) * -1) 0;
+    margin-top: 6px;
   }
 
   .side {
@@ -187,14 +196,12 @@
     max-width: 40ch;
     color: var(--fg-3);
   }
-  .loading :global(.logo circle) {
-    animation: pulse 1.4s var(--ease) infinite alternate;
-    animation-delay: calc(var(--i) * 40ms);
+  .loading :global(.logo) {
+    animation: pulse 1.1s var(--ease) infinite alternate;
   }
   @keyframes pulse {
     to {
-      opacity: 0.25;
-      scale: 0.6;
+      opacity: 0.3;
     }
   }
 </style>

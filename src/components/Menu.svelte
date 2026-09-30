@@ -2,11 +2,14 @@
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
+  import Heart from '@lucide/svelte/icons/heart';
+  import { tick } from 'svelte';
+  import { upcomingFavorites, type Occurrence } from '../lib/data/occurrences';
   import { formatDay, l, t, tn, weekdayLong } from '../lib/i18n/index.svelte';
   import { fit } from '../lib/data/labels';
   import type { Dish, Section } from '../lib/data/types';
-  import { app, assortmentsFor, dayList, outlet, sectionsFor, setDate, setOutlet, shortName, stepDay } from '../lib/state/app.svelte';
-  import { settings } from '../lib/state/settings.svelte';
+  import { app, assortmentsFor, dayList, openDish, outlet, sectionsFor, setDate, setOutlet, shortName, stepDay } from '../lib/state/app.svelte';
+  import { favoriteKey, settings } from '../lib/state/settings.svelte';
   import DishRow from './DishRow.svelte';
   import Plate from './Plate.svelte';
 
@@ -31,13 +34,40 @@
   });
 
   const visible = (dishes: Dish[]) => (settings.hide && !showAll ? dishes.filter((d) => fit(d, app.doc).ok) : dishes);
-  const hiddenCount = $derived(settings.hide && !showAll ? sections.reduce((n, s) => n + s.dishes.filter((d) => !fit(d, app.doc).ok).length, 0) : 0);
+  /** Dishes on this day that the filter dims or hides, said up front so a filter never seems to do nothing. */
+  const unfit = $derived(sections.reduce((n, s) => n + s.dishes.filter((d) => !fit(d, app.doc).ok).length, 0));
+  const hiding = $derived(settings.hide && !showAll);
   const shown = $derived(sections.map((s) => ({ ...s, dishes: visible(s.dishes) })).filter((s) => s.dishes.length));
   const offsets = $derived(shown.reduce<number[]>((acc, s, i) => [...acc, i ? acc[i - 1] + shown[i - 1].dishes.length : 0], []));
 
   /** Other outlets with a menu on this day, and this outlet's next day with one: somewhere to go from an empty day. */
   const elsewhere = $derived(sections.length ? [] : (app.doc?.outlets ?? []).filter((o) => o.id !== app.outletId && sectionsFor(o.id, app.date).length));
   const nextDay = $derived(sections.length ? null : (dayList(app.doc).find((d) => d > app.date && sectionsFor(app.outletId, d).length) ?? null));
+
+  /**
+   * Favourites served at another outlet on this day (and not here too), grouped by outlet. Off
+   * with the "point out favourites elsewhere" setting.
+   */
+  const favoritesElsewhere = $derived.by(() => {
+    if (!settings.favoriteHint || !settings.favorites.length || !app.doc) return [];
+    const here = new Set(sections.flatMap((s) => s.dishes.map((d) => favoriteKey(d.name.de))));
+    const byOutlet = new Map<number, Occurrence[]>();
+    for (const hits of upcomingFavorites(app.doc, settings.favorites, app.date).values()) {
+      for (const hit of hits) {
+        if (hit.date !== app.date || hit.outletId === app.outletId || here.has(favoriteKey(hit.dish.name.de))) continue;
+        const list = byOutlet.get(hit.outletId) ?? [];
+        if (!list.some((h) => h.dish.name.de === hit.dish.name.de)) list.push(hit);
+        byOutlet.set(hit.outletId, list);
+      }
+    }
+    return [...byOutlet.entries()].map(([outletId, hits]) => ({ outlet: app.doc!.outlets.find((o) => o.id === outletId)!, hits }));
+  });
+
+  async function goTo(hit: Occurrence) {
+    setOutlet(hit.outletId);
+    await tick();
+    openDish(hit.dish.id);
+  }
 
   const count = (list: Section[]) => list.reduce((n, s) => n + s.dishes.length, 0);
 
@@ -71,6 +101,24 @@
 <div class="menu-wrap" bind:this={wrap}>
   {#key `${app.outletId}:${app.date}`}
     <div class="menu" in:fly={{ x: direction * 32, duration: direction ? 380 : 0, easing: cubicOut, opacity: 0 }}>
+      {#each favoritesElsewhere as group (group.outlet.id)}
+        <div class="fav-hint">
+          <Heart size={14} fill="currentColor" />
+          <p>
+            {t('favorites.elsewhere', { outlet: shortName(group.outlet.name) })}
+            {#each group.hits as hit, i (hit.dish.id)}
+              {#if i}<span class="sep">·</span>{/if}
+              <button onclick={() => goTo(hit)}>{l(hit.dish.name)}</button>
+            {/each}
+          </p>
+        </div>
+      {/each}
+      {#if unfit && shown.length}
+        <p class="filter-note">
+          <span>{hiding ? tn('filter.hidden', unfit) : tn('filter.unfit', unfit)}</span>
+          {#if hiding}<button onclick={() => (showAll = true)}>{t('filter.showAll')}</button>{/if}
+        </p>
+      {/if}
       {#if shown.length}
         {#each shown as section, si (section.id)}
           <section class="station" aria-labelledby="st-{section.id}">
@@ -86,12 +134,6 @@
             </div>
           </section>
         {/each}
-        {#if hiddenCount}
-          <p class="hidden-note">
-            {tn('filter.hidden', hiddenCount)}
-            <button class="btn btn-ghost" onclick={() => (showAll = true)}>{t('filter.showAll')}</button>
-          </p>
-        {/if}
       {:else if sections.length}
         <div class="empty">
           <p class="empty-title">{tn('filter.hidden', count(sections))}</p>
@@ -155,6 +197,40 @@
     min-width: 0;
   }
 
+  .fav-hint {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: -14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: color-mix(in oklch, var(--danger) 9%, transparent);
+    color: var(--danger);
+    font-size: 13.5px;
+  }
+  .fav-hint :global(svg) {
+    flex: none;
+    translate: 0 2px;
+  }
+  .fav-hint p {
+    color: var(--fg-2);
+    line-height: 1.5;
+  }
+  .fav-hint button {
+    color: var(--fg);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+  }
+  .fav-hint button:hover {
+    text-decoration-color: currentColor;
+  }
+  .sep {
+    margin: 0 6px;
+    color: var(--fg-4);
+  }
+
   .station-head {
     display: flex;
     align-items: baseline;
@@ -185,13 +261,21 @@
     flex-direction: column;
   }
 
-  .hidden-note {
+  .filter-note {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     flex-wrap: wrap;
-    gap: 4px 8px;
+    gap: 4px 12px;
+    margin: -16px 0 -12px;
     font-size: 13px;
     color: var(--fg-3);
+  }
+  .filter-note button {
+    color: var(--fg);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
   }
 
   .empty {

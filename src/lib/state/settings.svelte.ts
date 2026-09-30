@@ -8,8 +8,10 @@ export type DietFilter = 'all' | 'vegetarian' | 'vegan';
 type Settings = {
   theme: Theme;
   language: Language;
-  /** Last outlet looked at; the app opens there next time. */
+  /** Last outlet looked at. */
   outlet: number | null;
+  /** Where the app opens: the last outlet looked at, or always the same one (an outlet id). */
+  startOutlet: 'last' | number;
   diet: DietFilter;
   noPork: boolean;
   /** Allergen codes (A, H, K …) to steer clear of. */
@@ -18,6 +20,10 @@ type Settings = {
   hide: boolean;
   /** Favourite dishes, by their German name in lower case (ids change every day). */
   favorites: string[];
+  /** Display names of favourites, for listing ones that aren't on the menu right now. */
+  favoriteNames: Record<string, { de: string; en: string }>;
+  /** Point out a favourite that's on at another outlet the same day. */
+  favoriteHint: boolean;
 };
 
 const KEY = 'cantina:settings';
@@ -26,11 +32,14 @@ const DEFAULTS: Settings = {
   theme: 'system',
   language: 'system',
   outlet: null,
+  startOutlet: 'last',
   diet: 'all',
   noPork: false,
   avoid: [],
   hide: false,
   favorites: [],
+  favoriteNames: {},
+  favoriteHint: true,
 };
 
 function load(): Settings {
@@ -69,15 +78,21 @@ export function isFavorite(name: string): boolean {
   return settings.favorites.includes(favoriteKey(name));
 }
 
-export function toggleFavorite(name: string): boolean {
-  const key = favoriteKey(name);
+export function toggleFavorite(name: { de: string; en: string }): boolean {
+  const key = favoriteKey(name.de);
   const on = !settings.favorites.includes(key);
   settings.favorites = on ? [...settings.favorites, key] : settings.favorites.filter((f) => f !== key);
+  if (on) settings.favoriteNames = { ...settings.favoriteNames, [key]: { de: name.de, en: name.en } };
+  else {
+    const { [key]: _, ...rest } = settings.favoriteNames;
+    settings.favoriteNames = rest;
+  }
   return on;
 }
 
+/** Filters set in Settings (the diet switch sits in the menu itself and isn't counted). */
 export function filtersActive(): number {
-  return (settings.diet !== 'all' ? 1 : 0) + (settings.noPork ? 1 : 0) + settings.avoid.length;
+  return (settings.noPork ? 1 : 0) + settings.avoid.length;
 }
 
 export function resetFilters() {

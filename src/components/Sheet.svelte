@@ -236,7 +236,9 @@
     }
   }
 
-  :global(html.sheet-open) {
+  /* The page behind a sheet stays put. On <body>, not <html>: locking the root element turned it
+     into its own scroller and the sticky header scrolled away behind the backdrop. */
+  :global(html.sheet-open body) {
     overflow: hidden;
   }
 </style>

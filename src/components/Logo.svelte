@@ -1,13 +1,25 @@
 <script lang="ts">
-  import { MARK_DOTS } from '../lib/mark';
+  import { MARK } from '../lib/mark';
 
   let { size = 28 }: { size?: number } = $props();
 </script>
 
 <svg class="logo" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-  {#each MARK_DOTS as dot, i (i)}
-    <circle cx={dot.x} cy={dot.y} r={dot.r} style:--i={i} />
-  {/each}
+  <!-- Fork first, then spoon: they rise in one after the other. -->
+  <g class="fork">
+    {#each MARK.slice(0, 5) as shape, i (i)}
+      {#if shape.tag === 'rect'}<rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} />
+      {:else if shape.tag === 'ellipse'}<ellipse cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} />
+      {:else}<path d={shape.d} />{/if}
+    {/each}
+  </g>
+  <g class="spoon">
+    {#each MARK.slice(5) as shape, i (i)}
+      {#if shape.tag === 'rect'}<rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} />
+      {:else if shape.tag === 'ellipse'}<ellipse cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} />
+      {:else}<path d={shape.d} />{/if}
+    {/each}
+  </g>
 </svg>
 
 <style>
@@ -15,17 +27,18 @@
     display: block;
     flex: none;
     color: var(--fg);
-  }
-  circle {
     fill: currentColor;
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: dot-in 700ms var(--ease-spring) backwards;
-    animation-delay: calc(var(--i) * 28ms);
   }
-  @keyframes dot-in {
+  g {
+    animation: rise-in 700ms var(--ease-spring) backwards;
+  }
+  .spoon {
+    animation-delay: 90ms;
+  }
+  @keyframes rise-in {
     from {
-      scale: 0;
+      opacity: 0;
+      translate: 0 5px;
     }
   }
 </style>

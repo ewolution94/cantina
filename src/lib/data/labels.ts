@@ -87,7 +87,7 @@ export function fit(dish: Dish, doc?: MenuDoc | null): Fit {
   const veg = dish.diet === 'vegan' || dish.diet === 'vegetarian';
   if (settings.diet === 'vegan' && dish.diet !== 'vegan') reasons.push(t('filter.notDiet', { diet: t('diet.vegan') }));
   else if (settings.diet === 'vegetarian' && !veg) reasons.push(t('filter.notDiet', { diet: t('diet.vegetarian') }));
-  if (settings.noPork && dish.feats.includes('pork')) reasons.push(t('diet.pork'));
+  if (settings.noPork && dish.feats.includes('pork')) reasons.push(t('filter.contains', { list: t('diet.pork') }));
   if (settings.avoid.length) {
     const hits = [...new Set(dish.allergens.filter((code) => settings.avoid.includes(allergenGroup(code)) || settings.avoid.includes(code)).map(allergenGroup))];
     if (hits.length) reasons.push(t('filter.contains', { list: hits.map((code) => allergenName(code, doc)).join(', ') }));

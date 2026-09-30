@@ -46,7 +46,7 @@
 
   function favoriteToggle() {
     if (!dish) return;
-    if (toggleFavorite(dish.name.de)) toast(t('dish.favorited'));
+    if (toggleFavorite(dish.name)) toast(t('dish.favorited'));
   }
 
   async function share() {

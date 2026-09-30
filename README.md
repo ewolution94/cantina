@@ -2,19 +2,20 @@
 
 The Kochwerk canteen menu (OTTO, Hamburg) as a fast, installable web app. It shows every outlet and every day, in German and English. The data is the same as on [kochwerk-web.webspeiseplan.de](https://kochwerk-web.webspeiseplan.de/menu); only the Speiseplan is shown.
 
-- **Outlets side by side:** Elbe, Bistro Boulevard, bonprix, Steelrunner and Kiosk. Each tab has a live open/closed dot, computed from the opening hours in Hamburg time.
+- **Outlets side by side:** Elbe, Bistro Boulevard, bonprix, Steelrunner and Kiosk, in a pill bar like Clinch's. On a phone it scrolls inside its frame, with chevrons wherever more outlets are hidden. The outlet's header shows whether it's open right now (Hamburg time) and its week's hours, with days that share hours folded into one line.
 - **Both weeks:** the day strip covers this week and next. On a phone you can swipe the menu left or right to change the day.
 - **Real photos when Kochwerk has them:** the kitchen photographs most dishes on the day. A dish without a photo gets a generated dot "plate" instead, coloured by what it is (vegan, fish, poultry …).
-- **Outlet photos in halftone:** the outlet photo is drawn as dots, the same idea as the portrait on ewolution.cloud. Switching outlets morphs the dots, and a pointer lens brings back the real colour.
+- **Outlet photos in halftone:** the outlet photo is drawn as dots in its own muted colours, at the same 4.6 px pitch as the portrait on ewolution.cloud. Switching outlets morphs the dots, and the portrait's magnifier makes dots near the cursor swell and part.
 - **What's in it:** each dish shows its price, CO₂ rating (A–E) with grams, kcal, macros, allergens and additives.
-- **Filters:** vegetarian, vegan, no pork, and allergens to avoid. Dishes that don't fit are dimmed, with the reason shown ("Contains milk"), or hidden if you prefer.
+- **Filters:** vegetarian and vegan sit right above the menu. No pork, allergens to avoid, and hide instead of dim live in Settings, where the menu's Filter button opens them. Dishes that don't fit are dimmed, with the reason shown ("Contains milk"), and the top of the menu says how many.
 - **Search (⌘K or `/`):** searches every dish at every outlet across both weeks. It also lists your favourites that are coming up.
-- **Favourites:** a saved dish is marked whenever it's back on the menu.
+- **Favourites:** a saved dish is marked whenever it's back on the menu. The heart in the header lists every favourite with its next day and outlet, and gets a dot when one is on today. Optionally, the menu points out a favourite that's on at another outlet the same day.
+- **Settings (⌘,):** language, theme, the outlet to open on (the last one visited by default, as in Clinch), the filters, and the favourites hint.
 - **Shareable links:** `/elbe/2026-10-01?dish=248749` opens exactly that dish. The back button closes an open dish.
-- **English and German:** the app follows the browser's language, with the DE/EN pill in the header, as on the landing page. Light and dark themes follow the system, with a toggle.
+- **English and German:** the app follows the browser's language until you pick one in Settings. Light and dark follow the system the same way. Prices read "5,80€" / "5.80€", with the euro sign after the amount in both languages.
 - **Installs to a home screen:** it opens instantly and shows the last menu it saw when there's no signal.
 
-Keyboard: `←`/`→` change the day, `1`–`5` pick an outlet, `t` jumps to today, `f` opens the filters, `d` switches the theme, and `⌘K` or `/` opens search.
+Keyboard: `←`/`→` change the day, `1`–`5` pick an outlet, `t` jumps to today, `f` opens the filters, `,` or `⌘,` opens Settings, `d` switches the theme, and `⌘K` or `/` opens search.
 
 ## How it works
 
@@ -54,7 +55,7 @@ Bump `REVISION` in `kochwerk.mjs` whenever the normalizer's output changes. That
 When the cursor rests over the list, scrolling slides rows under it, and each row enters and leaves its hover state. Early builds animated a paint property on hover: the row background, plus ~120 individually animated SVG circles per plate. Each row repainted, including downscaling its full-size photo, and wheel scrolling fell to 30 fps. The rules that fixed it:
 
 - **Hover effects are compositor-only.** The row highlight is its own layer that only fades, and photos and plates scale as whole elements. Effects ease in but drop instantly, so the start of a scroll costs nothing.
-- **Hover is paused while scrolling.** `src/lib/scrolling.ts` sets `data-scrolling` on `<html>` until 140 ms after the last scroll event, and CSS turns off pointer events on `main` for that time.
+- **Hover is paused while scrolling.** `src/lib/scrolling.ts` sets `data-scrolling` on `<html>` until 140 ms after the last scroll event, and CSS turns off pointer events on `main` for that time. This only applies to a mouse or trackpad, and any real mouse movement ends it at once, so the pause never swallows a click or a tap.
 - **Lists use thumbnails.** Kochwerk renders a 205 px square of every dish photo (`small_MEAL_1_1_<file>`). The list uses it, and the full photo only loads in the dish sheet. The proxy falls back to the original if a square doesn't exist yet.
 - **No endless paint animations.** The "open" beacon scales and fades a ring instead of animating `box-shadow`.
 - **Photos are decoded off the main thread.** The halftone decodes and shrinks them with `createImageBitmap`; the Kiosk photo is 3072 × 4096.
@@ -95,14 +96,14 @@ This mirrors Fermata and Clinch:
 ```
 server/kochwerk.mjs       upstream client, normalize(), cache, /api/menu + /img/ proxy
 server/server.mjs         static files + API + security headers, no dependencies
-src/lib/state/            app state + URL, settings (filters, favourites), theme, toasts
-src/lib/data/             document types, labels (allergens, diets) and the filter
+src/lib/state/            app state + URL, settings (filters, favourites, start outlet), theme, toasts
+src/lib/data/             document types, labels (allergens, diets), the filter, dish occurrences
+src/components/           UI; Settings, Favorites, Palette and DishSheet are sheets (Sheet.svelte)
 src/lib/halftone.ts       outlet photos as halftone dots (canvas)
 src/lib/plate.ts          generated dot plates for dishes without a photo
 src/lib/time.ts           Hamburg clock, opening status, ISO weeks
 src/lib/scrolling.ts      pauses hover while the page scrolls
 tools/scroll-bench.mjs    scroll benchmark (headless Chrome over CDP)
-src/components/           UI
 public/sw.js              offline shell, fonts and photos
-brand/                    mark and app icons (public/icons/ is rendered from them)
+brand/                    the fork-and-spoon mark and app icons (public/icons/ is rendered from them)
 ```

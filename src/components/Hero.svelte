@@ -1,6 +1,6 @@
 <script lang="ts">
   import Clock from '@lucide/svelte/icons/clock';
-  import { formatDay, l, t, weekdayLong, weekdayShort } from '../lib/i18n/index.svelte';
+  import { l, t, weekdayLong, weekdayShort } from '../lib/i18n/index.svelte';
   import { Halftone } from '../lib/halftone';
   import { app, outlet } from '../lib/state/app.svelte';
   import { effectiveTheme } from '../lib/state/theme.svelte';
@@ -8,18 +8,27 @@
 
   let canvas: HTMLCanvasElement;
   let halftone: Halftone | null = null;
-  // Open by default where there's room for it (the desktop column), a tap away on phones.
-  let showHours = $state(matchMedia('(min-width: 1000px)').matches);
 
   const current = $derived(outlet());
   const isToday = $derived(app.date === app.now.date);
   const status = $derived(current ? outletStatus(current, app.now) : null);
 
-  /** Monday–Friday of the selected week, plus the weekend if the outlet opens then. */
-  const week = $derived.by(() => {
+  /**
+   * The selected week's hours, with runs of days that keep the same hours folded into one line:
+   * "Mo – Do 07:30–17:30", "Fr 07:30–14:00". Monday to Friday, plus the weekend if it opens then.
+   */
+  const groups = $derived.by(() => {
     if (!current || !app.date) return [];
     const monday = addDays(app.date, -weekday(app.date));
-    return Array.from({ length: 7 }, (_, i) => addDays(monday, i)).filter((day, i) => i < 5 || current.hours[i]?.length);
+    const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).filter((_, i) => i < 5 || current.hours[i]?.length);
+    const out: { days: string[]; hours: string }[] = [];
+    for (const day of days) {
+      const hours = dayHours(day);
+      const last = out.at(-1);
+      if (last && last.hours === hours) last.days.push(day);
+      else out.push({ days: [day], hours });
+    }
+    return out;
   });
 
   function statusText(s: Status): string {
@@ -84,7 +93,7 @@
       <p class="label">{app.doc?.location.name}</p>
       <h1 id="outlet-name" class="name">{current.name}</h1>
 
-      <button class="status-line" onclick={() => (showHours = !showHours)} aria-expanded={showHours}>
+      <p class="status-line">
         {#if isToday && status}
           <span class="dot {statusTone(status)}" aria-hidden="true"></span>
           <span>{statusText(status)}</span>
@@ -92,21 +101,21 @@
           <Clock size={14} />
           <span>{t('status.hoursOn', { day: weekdayLong(app.date), hours: dayHours(app.date) })}</span>
         {/if}
-      </button>
+      </p>
 
-      <div class="more" class:open={showHours}>
-        <dl class="hours" aria-label={t('hours.title')}>
-          {#each week as day (day)}
-            <div class="row" class:sel={day === app.date} class:today={day === app.now.date}>
-              <dt title={formatDay(day)}>{weekdayShort(day)}</dt>
-              <dd class="tabular">{dayHours(day)}</dd>
-            </div>
-          {/each}
-        </dl>
-        {#if current.note}
-          <p class="note">{l(current.note)}</p>
-        {/if}
-      </div>
+      <dl class="hours" aria-label={t('hours.title')}>
+        {#each groups as group (group.days[0])}
+          <div class="row" class:sel={group.days.includes(app.date)}>
+            <dt>
+              {weekdayShort(group.days[0])}{#if group.days.length > 1}{` – ${weekdayShort(group.days.at(-1)!)}`}{/if}
+            </dt>
+            <dd class="tabular">{group.hours}</dd>
+          </div>
+        {/each}
+      </dl>
+      {#if current.note}
+        <p class="note">{l(current.note)}</p>
+      {/if}
     </div>
   {/if}
 </section>
@@ -129,9 +138,8 @@
     height: 100%;
     touch-action: pan-y;
     /* Fades out towards the bottom, where the outlet's name sits over it. */
-    mask-image: radial-gradient(85% 100% at 50% 0%, #000 30%, transparent 100%);
-    -webkit-mask-image: radial-gradient(85% 100% at 50% 0%, #000 30%, transparent 100%);
-    opacity: 0.85;
+    mask-image: linear-gradient(to bottom, #000 38%, transparent 96%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 38%, transparent 96%);
   }
 
   .info {
@@ -174,9 +182,6 @@
     color: var(--fg-2);
     transition: border-color 160ms var(--ease);
   }
-  .status-line:hover {
-    border-color: var(--line-strong);
-  }
 
   .dot {
     width: 7px;
@@ -213,24 +218,8 @@
     }
   }
 
-  .more {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 320ms var(--ease-out);
-  }
-  .more > * {
-    min-height: 0;
-    overflow: hidden;
-  }
-  .more.open {
-    grid-template-rows: 1fr;
-  }
-  .more.open > :first-child {
-    margin-top: 16px;
-  }
-
   .hours {
-    margin: 0;
+    margin: 16px 0 0;
     display: grid;
     gap: 0;
   }
@@ -254,9 +243,6 @@
     margin: 0;
     font-size: 13px;
   }
-  .row.today dt::after {
-    content: ' ·';
-  }
   .row.sel {
     color: var(--fg);
   }
@@ -275,10 +261,13 @@
       aspect-ratio: 1 / 1.02;
       margin: 0 -12px;
     }
-    /* No frame: the photo dissolves into the page. */
+    /* No frame: the photo dissolves into the page at its edges, most of all at the bottom
+       where the name sits, and stays whole in between. */
     canvas {
-      mask-image: radial-gradient(closest-side at 50% 44%, #000 40%, transparent 100%);
-      -webkit-mask-image: radial-gradient(closest-side at 50% 44%, #000 40%, transparent 100%);
+      mask-image:
+        linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
+        linear-gradient(to bottom, transparent, #000 16%, #000 56%, transparent 94%);
+      mask-composite: intersect;
     }
     .info {
       margin-top: -64px;

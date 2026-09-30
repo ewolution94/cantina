@@ -1,15 +1,22 @@
 <script lang="ts">
+  import Heart from '@lucide/svelte/icons/heart';
   import Search from '@lucide/svelte/icons/search';
-  import Sun from '@lucide/svelte/icons/sun';
-  import Moon from '@lucide/svelte/icons/moon';
-  import { locale, setLocale, t } from '../lib/i18n/index.svelte';
+  import Settings2 from '@lucide/svelte/icons/settings-2';
+  import { t } from '../lib/i18n/index.svelte';
+  import { upcomingFavorites } from '../lib/data/occurrences';
   import { app, defaultDate, setDate } from '../lib/state/app.svelte';
-  import { effectiveTheme, toggleTheme } from '../lib/state/theme.svelte';
+  import { settings } from '../lib/state/settings.svelte';
   import Logo from './Logo.svelte';
   import OutletTabs from './OutletTabs.svelte';
 
   let scrolled = $state(false);
   const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+
+  /** A favourite is on somewhere today: the heart says so. */
+  const favoriteToday = $derived(
+    settings.favorites.length > 0 &&
+      [...upcomingFavorites(app.doc, settings.favorites, app.now.date).values()].some((hits) => hits[0].date === app.now.date),
+  );
 </script>
 
 <svelte:window onscroll={() => (scrolled = scrollY > 4)} />
@@ -30,39 +37,21 @@
       <span class="word"><em>C</em>antina</span>
     </a>
 
-    <nav class="outlets">
+    <nav class="outlets" aria-label={t('outlets.label')}>
       {#if app.doc}
-        <OutletTabs variant="bar" />
+        <OutletTabs />
       {/if}
     </nav>
 
     <div class="actions">
-      <button class="search" onclick={() => (app.palette = true)} aria-label={t('common.search')}>
-        <Search size={16} />
-        <span class="search-label">{t('common.search')}</span>
-        <span class="kbd">{mac ? '⌘' : 'Ctrl'} K</span>
+      <button class="icon-btn" onclick={() => (app.palette = true)} aria-label={t('common.search')} title="{t('common.search')} ({mac ? '⌘' : 'Ctrl'} K)">
+        <Search size={18} />
       </button>
-
-      <button
-        class="lang"
-        onclick={() => setLocale(locale() === 'de' ? 'en' : 'de')}
-        aria-label={t('common.switchLanguage')}
-        title={t('common.switchLanguage')}
-      >
-        <span class="opt" class:on={locale() === 'de'} lang="de">DE</span>
-        <span class="opt" class:on={locale() === 'en'} lang="en">EN</span>
+      <button class="icon-btn fav" class:lit={favoriteToday} onclick={() => (app.favorites = true)} aria-label={t('favorites.open')} title={t('favorites.open')}>
+        <Heart size={18} />
       </button>
-
-      <button
-        class="icon-btn theme"
-        onclick={toggleTheme}
-        aria-label={t('common.switchTheme', { theme: effectiveTheme() === 'dark' ? t('common.themeLight') : t('common.themeDark') })}
-      >
-        {#if effectiveTheme() === 'dark'}
-          <Sun size={17} />
-        {:else}
-          <Moon size={17} />
-        {/if}
+      <button class="icon-btn" onclick={() => (app.settings = 'general')} aria-label={t('settings.title')} title={t('settings.title')}>
+        <Settings2 size={18} />
       </button>
     </div>
   </div>
@@ -95,13 +84,18 @@
 
   .inner {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    /* The outlet bar may shrink (and scroll inside its frame) before it pushes the sides. */
+    grid-template-columns: 1fr minmax(0, auto) 1fr;
     align-items: center;
     gap: 16px;
     max-width: var(--page);
     height: var(--bar-h);
     margin: 0 auto;
     padding: 0 var(--gutter);
+  }
+
+  .outlets {
+    min-width: 0;
   }
 
   .brand {
@@ -128,69 +122,27 @@
     justify-self: end;
     display: flex;
     align-items: center;
-    gap: 6px;
-  }
-
-  .search {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 8px 0 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--fill);
-    color: var(--fg-3);
-    font-size: 13px;
-    transition:
-      border-color 160ms var(--ease),
-      color 160ms var(--ease);
-  }
-  .search:hover {
-    color: var(--fg);
-    border-color: var(--line-strong);
-  }
-  .search .kbd {
-    height: 22px;
-  }
-
-  /* The landing page's language pill: both options visible, the current one filled. */
-  .lang {
-    display: inline-flex;
-    align-items: center;
     gap: 2px;
-    height: 36px;
-    padding: 0 4px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--fill);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--fg-3);
-    transition:
-      color 0.2s,
-      border-color 0.2s;
-  }
-  .lang:hover {
-    color: var(--fg-2);
-    border-color: var(--line-strong);
-  }
-  .opt {
-    padding: 4px 7px;
-    border-radius: 999px;
-    transition:
-      color 0.3s var(--ease),
-      background-color 0.3s var(--ease);
-  }
-  .opt.on {
-    color: var(--fg);
-    background: var(--fill-3);
   }
 
-  .theme {
-    width: 36px;
-    height: 36px;
+  .actions .icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+  /* A favourite is on somewhere today. */
+  .fav {
+    position: relative;
+  }
+  .fav.lit::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 0 2px var(--bg);
   }
 
   @media (max-width: 999px) {
@@ -199,15 +151,6 @@
     }
     .outlets {
       display: none;
-    }
-    .search-label,
-    .search .kbd {
-      display: none;
-    }
-    .search {
-      width: 36px;
-      padding: 0;
-      justify-content: center;
     }
   }
 
