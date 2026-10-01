@@ -114,6 +114,7 @@ export const de: Record<MessageKey, string> = {
   'feat.climate': 'Klimafreundlich',
   'feat.sustainable': 'Sustainable Canteen',
 
+  'palette.cancel': 'Abbrechen',
   'palette.placeholder': 'Gerichte, Stationen, Standorte suchen…',
   'palette.label': 'Speiseplan durchsuchen',
   'palette.empty': 'Nichts passt diese Woche zu „{query}“.',

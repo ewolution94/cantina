@@ -34,6 +34,10 @@
       closing = false;
       drag = 0;
       dialog.showModal();
+      // showModal() focuses the first button, which Safari rings as if it were tabbed to (a
+      // heavy circle around the close button on iPhones). The sheet itself takes focus instead;
+      // Tab still reaches the button first.
+      dialog.focus({ preventScroll: true });
       document.documentElement.classList.add('sheet-open');
     } else if (!open && dialog.open) {
       if (reduced()) return finish();
@@ -42,6 +46,23 @@
       const fallback = setTimeout(() => closing && finish(), 450);
       return () => clearTimeout(fallback);
     }
+  });
+
+  // Keeps a top sheet (the search palette) sized to what's visible above a phone keyboard.
+  $effect(() => {
+    const viewport = window.visualViewport;
+    if (!open || !top || !viewport) return;
+    const update = () => {
+      dialog.style.setProperty('--vvh', `${viewport.height}px`);
+      dialog.style.setProperty('--vvo', `${viewport.offsetTop}px`);
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
   });
 
   function finish() {
@@ -82,6 +103,7 @@
 
 <dialog
   bind:this={dialog}
+  tabindex="-1"
   class="sheet"
   class:wide
   class:top
@@ -145,9 +167,30 @@
     animation: fade-out 260ms var(--ease) forwards;
   }
 
-  /* The search palette: tall from the start, so results have room above a phone keyboard. */
+  /* The search palette on phones hangs from the top and is exactly as tall as what's visible
+     above the keyboard (--vvh, from visualViewport). A bottom sheet doesn't survive the keyboard
+     on iOS: Safari pans the page to make room and the search field slides out of view. */
   .sheet.top {
-    height: 92dvh;
+    inset: 0 0 auto 0;
+    height: var(--vvh, 100dvh);
+    max-height: none;
+    padding-top: env(safe-area-inset-top);
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0 0 var(--r-xl) var(--r-xl);
+    translate: 0 var(--vvo, 0px);
+  }
+  .sheet.top[open] {
+    animation: drop-in 300ms var(--ease-out);
+  }
+  .sheet.top.closing {
+    animation: drop-out 200ms var(--ease) forwards;
+  }
+  .sheet.top .grip {
+    display: none;
+  }
+  .sheet.top .body {
+    padding-bottom: 0;
   }
 
   .grip {
@@ -165,12 +208,25 @@
     background: var(--line-strong);
   }
 
+  /* `auto`, not `flex: 1`: the dialog has a max-height but no height, and Safari resolves a 0%
+     basis against that literally, collapsing the sheet to its grip. Sized by its content, then
+     shrunk to fit and scrolled, it works the same everywhere. */
   .body {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+  }
+  .sheet:focus {
+    outline: none;
+  }
+  /* In a phone's browser (not the installed app), Safari's floating toolbar sits over the bottom
+     of the sheet; leave room to scroll the last rows above it. */
+  @media (display-mode: browser) and (max-width: 719px) {
+    .body {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 76px);
+    }
   }
 
   @media (min-width: 720px) {
@@ -188,13 +244,21 @@
       width: min(680px, calc(100vw - 48px));
     }
     .sheet.top {
+      inset: 0;
       height: auto;
+      max-height: min(86dvh, 860px);
       margin-top: 12vh;
+      padding-top: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      translate: none;
     }
-    .sheet[open] {
+    .sheet[open],
+    .sheet.top[open] {
       animation: pop-in 320ms var(--ease-out);
     }
-    .sheet.closing {
+    .sheet.closing,
+    .sheet.top.closing {
       animation: pop-out 200ms var(--ease) forwards;
     }
     .grip {
@@ -202,6 +266,18 @@
     }
   }
 
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      translate: 0 -24px;
+    }
+  }
+  @keyframes drop-out {
+    to {
+      opacity: 0;
+      translate: 0 -16px;
+    }
+  }
   @keyframes sheet-in {
     from {
       translate: 0 100%;

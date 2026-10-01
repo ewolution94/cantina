@@ -115,6 +115,7 @@ export const en = {
   'feat.climate': 'Climate-friendly',
   'feat.sustainable': 'Sustainable Canteen',
 
+  'palette.cancel': 'Cancel',
   'palette.placeholder': 'Search dishes, stations, outlets…',
   'palette.label': 'Search the menu',
   'palette.empty': 'Nothing matches “{query}” this week.',

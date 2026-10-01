@@ -200,6 +200,7 @@
       />
       <span class="kbd">esc</span>
     </label>
+    <button class="cancel" onclick={() => (app.palette = false)}>{t('palette.cancel')}</button>
 
     <div class="list" bind:this={list} role="listbox" aria-label={t('palette.results')}>
       {#if !query.trim() && favorites.length}
@@ -262,6 +263,9 @@
     display: flex;
     flex-direction: column;
     max-height: min(80dvh, 640px);
+  }
+  .cancel {
+    display: none;
   }
   .field {
     display: flex;
@@ -395,8 +399,25 @@
       display: none;
     }
     .palette {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto 1fr;
       height: 100%;
       max-height: none;
+    }
+    .field {
+      margin: 10px 0 0 14px;
+    }
+    .cancel {
+      display: block;
+      align-self: end;
+      height: 52px;
+      padding: 0 16px 0 14px;
+      font-size: 15px;
+      color: var(--fg-2);
+    }
+    .list {
+      grid-column: 1 / -1;
     }
   }
 </style>
