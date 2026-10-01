@@ -133,7 +133,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname === '/healthz') return;
+  // Census's beacon and page views go straight to the network; a cached copy would be stale.
+  if (url.pathname === '/healthz' || url.pathname === '/_e.js' || url.pathname === '/_e') return;
 
   if (request.mode === 'navigate') {
     // Every route (/elbe, /bonprix/2026-10-05 …) is served the same document, so one cached

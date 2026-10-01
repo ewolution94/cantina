@@ -20,16 +20,27 @@ services:
     environment:
       - PORT=5200
       - TZ=Europe/Berlin
+      # Visit counts: /_e and /_e.js are forwarded to Census over the `ewolution` network.
+      # Remove the line to stop counting; the page doesn't change either way.
+      - CANTINA_CENSUS=http://census:4901
       # Defaults are right for OTTO Kochwerk; only here to make them easy to find.
       # - CANTINA_LOCATION=1800
       # - CANTINA_TTL=15
     volumes:
       # The last good menu, so a container update or a Kochwerk outage never shows an empty page.
       - cantina-data:/data
+    networks:
+      # The shared network Census listens on. It must exist before this stack is updated
+      # (Portainer → Networks → `ewolution`).
+      - ewolution
     labels:
       # The opt-in the shared Watchtower looks for (it runs with
       # WATCHTOWER_LABEL_ENABLE=true, so unlabelled containers are never touched).
       - "com.centurylinklabs.watchtower.enable=true"
+
+networks:
+  ewolution:
+    external: true
 
 volumes:
   cantina-data:

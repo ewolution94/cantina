@@ -50,3 +50,6 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' --path-as-is 'http://127.0.0.1:4899/img/KMSLiveRessources/../../etc/passwd.jpg')" = 404
           test "$(curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:4899/img/elsewhere/x.jpg')" = 404
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:4899/api/menu)" = 405
+          # The Census forwarder is wired in; without CANTINA_CENSUS it answers locally.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4899/_e.js)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST --data '{}' http://127.0.0.1:4899/_e)" = 204

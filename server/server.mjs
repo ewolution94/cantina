@@ -10,6 +10,7 @@
 //   CANTINA_TOKEN        its proxy token; only needed if auto-discovery ever fails
 //   CANTINA_CACHE        file that keeps the last good menu across restarts (default <project>/data/menu.json)
 //   CANTINA_TTL          minutes a fetched menu counts as fresh (default 15)
+//   CANTINA_CENSUS       Census's ingest origin for visit counts, e.g. http://census:4901 (default: off)
 
 import http from 'node:http';
 import { createReadStream } from 'node:fs';
@@ -18,6 +19,7 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { createApi } from './kochwerk.mjs';
+import { createCensus } from './census.mjs';
 
 const portFlag = process.argv.indexOf('--port');
 const PORT = Number(portFlag > -1 ? process.argv[portFlag + 1] : (process.env.PORT ?? 8080));
@@ -69,6 +71,7 @@ const api = createApi({
   cacheFile: process.env.CANTINA_CACHE ? path.resolve(process.env.CANTINA_CACHE) : fileURLToPath(new URL('../data/menu.json', import.meta.url)),
   ttl: Number(process.env.CANTINA_TTL ?? 15) * 60_000,
 });
+const census = createCensus({ target: process.env.CANTINA_CENSUS, site: 'cantina' });
 const compressed = new Map();
 
 async function resolveFile(pathname) {
@@ -130,6 +133,7 @@ const server = http.createServer(async (req, res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
 
   try {
+    if (await census(req, res)) return;
     await api(req, res, async () => {
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         res.writeHead(405).end();

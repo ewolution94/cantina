@@ -38,6 +38,7 @@ webspeiseplan.de is a jQuery app talking to `/index.php?token=…&model=…`. Th
 - **The token** comes from webspeiseplan's own public bundle (`PROXY_TOKEN` in `index.js`). If a request ever comes back empty, the server reads the current token out of that bundle again and retries, so a rotated token fixes itself.
 - **Caching is stale-while-revalidate.** A menu older than 15 minutes is still served at once and refreshed behind it. After midnight the server waits for a fresh copy instead, because the week window moves. The last good document is written to `CANTINA_CACHE`, so a restart or a Kochwerk outage never shows an empty page.
 - **The photo proxy** (`/img/KMSLiveRessources/…`) only fetches image paths from `kochwerk.konkaapps.de`. It exists because the halftone canvas has to read pixels, which needs same-origin images.
+- **Visit counts** go to [Census](https://github.com/ewolution94/census), the self-hosted counter on the NAS: no cookies, nothing stored on the device. `server/census.mjs` forwards `/_e.js` and `/_e` to it over the shared Docker network, adding only `X-Site: cantina`. The client loads the beacon once the first route is settled, so the `/` → `/<outlet>` redirect isn't counted twice. Every path change counts as a page view (`/elbe`, `/elbe/2026-10-02`, `/overview`); `?dish=` doesn't. Without `CANTINA_CENSUS` (local runs) the forwarder answers with an empty beacon and counts nothing.
 
 ### What the normalizer cleans up
 
@@ -83,6 +84,7 @@ This mirrors Fermata and Clinch:
 - The shared Watchtower picks the image up. With this setup, a push to `release` is the whole deploy.
 - The NAS runs `deploy/portainer-stack.yml`, on port **5200** by default.
 - Make the GHCR package public, so that Watchtower can pull it anonymously.
+- The stack joins the external Docker network `ewolution`, where Census listens as `census:4901`. Create the network once in Portainer (Networks → Add network) before the first deploy.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -92,12 +94,14 @@ This mirrors Fermata and Clinch:
 | `CANTINA_CACHE` | `data/menu.json` (`/data/menu.json` in Docker) | Last good menu, kept across restarts |
 | `CANTINA_ORIGIN` | `https://kochwerk-web.webspeiseplan.de` | webspeiseplan instance |
 | `CANTINA_TOKEN` | the public one | Only if auto-discovery ever fails |
+| `CANTINA_CENSUS` | off | Census's ingest origin, `http://census:4901` on the NAS |
 
 ## Project layout
 
 ```
 server/kochwerk.mjs       upstream client, normalize(), cache, /api/menu + /img/ proxy
 server/server.mjs         static files + API + security headers, no dependencies
+server/census.mjs         forwards /_e.js and /_e to Census (visit counts)
 src/lib/state/            app state + URL, settings (filters, favourites, start outlet), theme, toasts
 src/lib/data/             document types, labels (allergens, diets), the filter, dish occurrences
 src/components/           UI; Settings, Favorites, Palette and DishSheet are sheets (Sheet.svelte)

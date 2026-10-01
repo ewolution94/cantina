@@ -5,6 +5,7 @@
 import type { Assortment, MenuDoc, Outlet, Section } from '../data/types';
 import { addDays, berlinNow, weekday, type Now } from '../time';
 import { settings } from './settings.svelte';
+import { loadCensus } from '../census';
 
 const CACHE_KEY = 'cantina:menu';
 
@@ -82,8 +83,10 @@ function adopt(doc: MenuDoc) {
   const first = !app.doc;
   app.doc = doc;
   app.status = 'ready';
-  if (first) fromUrl();
-  else if (app.outletId !== OVERVIEW && !doc.outlets.some((o) => o.id === app.outletId)) app.outletId = defaultOutlet(doc);
+  if (first) {
+    fromUrl();
+    loadCensus();
+  } else if (app.outletId !== OVERVIEW && !doc.outlets.some((o) => o.id === app.outletId)) app.outletId = defaultOutlet(doc);
 }
 
 addEventListener('visibilitychange', () => {
