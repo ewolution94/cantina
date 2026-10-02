@@ -1,18 +1,18 @@
-// The mark: a fork and a spoon, drawn on a 32-unit grid. The same shapes make the favicon and the
-// app icons in brand/ and public/icons/.
+// The mark: fork, plate and knife, the app icon's drawing on its 1024 grid
+// (development/plans/app-icons, the Field set). The dot on the plate is today's dish.
+// brand/ and public/ hold the icons drawn from the same shapes.
 
-export type MarkShape =
-  | { tag: 'rect'; x: number; y: number; width: number; height: number; rx: number }
-  | { tag: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
-  | { tag: 'path'; d: string };
+export const FORK =
+  'M178 278 a20 20 0 0 1 40 0 V400 h18 V278 a20 20 0 0 1 40 0 V400 h18 V278 a20 20 0 0 1 40 0 V430 c0 46 -26 76 -60 88 V732 a38 38 0 0 1 -76 0 V518 c-34 -12 -60 -42 -60 -88 Z';
 
-export const MARK: MarkShape[] = [
-  { tag: 'rect', x: 6.62, y: 3.2, width: 1.75, height: 8.60, rx: 0.875 },
-  { tag: 'rect', x: 9.53, y: 3.2, width: 1.75, height: 8.60, rx: 0.875 },
-  { tag: 'rect', x: 12.43, y: 3.2, width: 1.75, height: 8.60, rx: 0.875 },
-  { tag: 'path', d: "M6.62 10.40H14.18V11.60C14.18 13.80 12.30 15.30 11.50 15.60H9.30C8.50 15.30 6.62 13.80 6.62 11.60Z" },
-  { tag: 'rect', x: 9.20, y: 13.70, width: 2.4, height: 15.10, rx: 1.2 },
-  { tag: 'ellipse', cx: 21.7, cy: 8.7, rx: 4.2, ry: 5.5 },
-  { tag: 'path', d: "M20.50 13.2C20.50 13.2 21.20 14.2 20.80 15.5L20.50 27.6A1.2 1.2 0 0 0 22.90 27.6L22.60 15.5C22.20 14.2 22.90 13.2 22.90 13.2Z" },
-  { tag: 'rect', x: 20.50, y: 15, width: 2.4, height: 13.8, rx: 1.2 },
-];
+export const KNIFE =
+  'M808 264 c-64 30 -92 120 -92 214 c0 30 12 48 38 56 V732 a38 38 0 0 0 76 0 V300 c0 -26 -10 -42 -22 -36 Z';
+
+/** The plate's rim: a ring from r 109.2 to 166.8, filled with the even-odd rule. */
+export const PLATE =
+  'M345.2 512 a166.8 166.8 0 1 0 333.6 0 a166.8 166.8 0 1 0 -333.6 0 Z M402.8 512 a109.2 109.2 0 1 0 218.4 0 a109.2 109.2 0 1 0 -218.4 0 Z';
+
+export const DISH = { cx: 512, cy: 512, r: 63 };
+
+/** A square around the three shapes (they span x 138–830, y 258–770). */
+export const VIEWBOX = '130 160 708 708';
