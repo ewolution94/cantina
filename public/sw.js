@@ -43,7 +43,10 @@ async function precacheShell() {
   await shell.put(SHELL_URL, response.clone());
 
   const html = await response.text();
-  const named = [...html.matchAll(/["'(](\/[A-Za-z0-9._/-]+\.(?:js|css|svg|png|webmanifest))["')]/g)].map((m) => m[1]);
+  // Not the iOS launch images: iOS fetches the one it needs itself, and there are 22 of them.
+  const named = [...html.matchAll(/["'(](\/[A-Za-z0-9._/-]+\.(?:js|css|svg|png|webmanifest))["')]/g)]
+    .map((m) => m[1])
+    .filter((href) => !href.startsWith('/splash/'));
   const assets = await caches.open(ASSETS);
   await Promise.all(
     [...new Set(named)].map(async (href) => {
@@ -135,6 +138,8 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   // Census's beacon and page views go straight to the network; a cached copy would be stale.
   if (url.pathname === '/healthz' || url.pathname === '/_e.js' || url.pathname === '/_e') return;
+  // The iOS launch images: iOS keeps its own copy from when the app was added to the home screen.
+  if (url.pathname.startsWith('/splash/')) return;
 
   if (request.mode === 'navigate') {
     // Every route (/elbe, /bonprix/2026-10-05 …) is served the same document, so one cached
