@@ -1,3 +1,5 @@
+import { untrack } from 'svelte';
+import { themeShift } from '../../../vendor/ewo/elements/theme-shift.js';
 import { settings } from '../state/settings.svelte';
 import { de } from './de';
 import { en, type MessageKey } from './en';
@@ -20,9 +22,18 @@ function detectLocale(): Locale {
 let systemLocale = $state<Locale>(detectLocale());
 addEventListener('languagechange', () => (systemLocale = detectLocale()));
 
-/** The active language: the user's choice, or the browser's until they make one. */
+/** The language the user's choice asks for: theirs, or the browser's until they make one. */
+const wanted = (): Locale => (settings.language === 'system' ? systemLocale : settings.language);
+
+// The language on screen. A pick in Settings reaches it under Folio's themeShift (the page blurs for
+// a moment, like a theme change); the first run and the browser's own language changing under
+// "system" apply at once.
+let shown = $state<Locale>(wanted());
+let lastChoice = settings.language;
+
+/** The active language, as it's shown. */
 export function locale(): Locale {
-  return settings.language === 'system' ? systemLocale : settings.language;
+  return shown;
 }
 
 export function setLocale(next: Locale) {
@@ -30,6 +41,14 @@ export function setLocale(next: Locale) {
 }
 
 $effect.root(() => {
+  $effect(() => {
+    const next = wanted(); // tracks the choice and the browser's language
+    const picked = settings.language !== lastChoice;
+    lastChoice = settings.language;
+    if (next === untrack(() => shown)) return;
+    if (picked) themeShift(() => (shown = next));
+    else shown = next;
+  });
   $effect(() => {
     document.documentElement.lang = locale();
   });

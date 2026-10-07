@@ -1,11 +1,11 @@
 <script lang="ts">
   import Heart from '@lucide/svelte/icons/heart';
   import Search from '@lucide/svelte/icons/search';
-  import Settings2 from '@lucide/svelte/icons/settings-2';
   import { t } from '../lib/i18n/index.svelte';
   import { upcomingFavorites } from '../lib/data/occurrences';
   import { app, defaultDate, setDate } from '../lib/state/app.svelte';
   import { settings } from '../lib/state/settings.svelte';
+  import '../../vendor/ewo/elements/settings-button.js';
   import Logo from './Logo.svelte';
   import OutletTabs from './OutletTabs.svelte';
 
@@ -50,9 +50,9 @@
       <button class="icon-btn fav" class:lit={favoriteToday} onclick={() => (app.favorites = true)} aria-label={t('favorites.open')} title={t('favorites.open')}>
         <Heart size={18} />
       </button>
-      <button class="icon-btn" onclick={() => (app.settings = 'general')} aria-label={t('settings.title')} title={t('settings.title')}>
-        <Settings2 size={18} />
-      </button>
+      <!-- A real <button> inside (Folio's element): Enter and Space click it, the click reaches here. -->
+      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+      <ewo-settings-button onclick={() => (app.settings = 'general')}></ewo-settings-button>
     </div>
   </div>
 </header>

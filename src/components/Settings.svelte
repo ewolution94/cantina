@@ -2,16 +2,12 @@
   import { tick } from 'svelte';
   import Check from '@lucide/svelte/icons/check';
   import Heart from '@lucide/svelte/icons/heart';
-  import Languages from '@lucide/svelte/icons/languages';
-  import Monitor from '@lucide/svelte/icons/monitor';
-  import Moon from '@lucide/svelte/icons/moon';
-  import Sun from '@lucide/svelte/icons/sun';
   import X from '@lucide/svelte/icons/x';
   import { formatClock, t } from '../lib/i18n/index.svelte';
   import { MAIN_ALLERGENS, allergenName } from '../lib/data/labels';
   import { app, shortName } from '../lib/state/app.svelte';
   import { resetFilters, settings } from '../lib/state/settings.svelte';
-  import Segmented from './Segmented.svelte';
+  import '../../vendor/ewo/elements/settings-basics.js';
   import Sheet from './Sheet.svelte';
   import Toggle from './Toggle.svelte';
 
@@ -39,33 +35,13 @@
 
     <section>
       <h3 class="label">{t('settings.general')}</h3>
-      <div class="row">
-        <span class="name">{t('settings.language')}</span>
-        <!-- Language names stay in their own language, so they're findable whatever is active. -->
-        <Segmented
-          label={t('settings.language')}
-          value={settings.language}
-          onchange={(language) => (settings.language = language)}
-          options={[
-            { value: 'system', label: t('settings.system'), icon: Languages },
-            { value: 'de', label: 'Deutsch' },
-            { value: 'en', label: 'English' },
-          ]}
-        />
-      </div>
-      <div class="row">
-        <span class="name">{t('settings.theme')}</span>
-        <Segmented
-          label={t('settings.theme')}
-          value={settings.theme}
-          onchange={(theme) => (settings.theme = theme)}
-          options={[
-            { value: 'system', label: t('settings.system'), icon: Monitor },
-            { value: 'light', label: t('settings.light'), icon: Sun },
-            { value: 'dark', label: t('settings.dark'), icon: Moon },
-          ]}
-        />
-      </div>
+      <!-- Language and Theme: the same rows, options and order in every app (Folio). -->
+      <ewo-settings-basics
+        language={settings.language}
+        theme={settings.theme}
+        onlanguage-change={(event) => (settings.language = event.detail.value)}
+        ontheme-change={(event) => (settings.theme = event.detail.value)}
+      ></ewo-settings-basics>
       <Toggle bind:checked={settings.simple} label={t('settings.simple')} hint={t('settings.simpleHint')} />
       <label class="row">
         <span class="text">
