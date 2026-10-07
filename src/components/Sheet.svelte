@@ -81,11 +81,18 @@
     onclose();
   }
 
+  // Dragged down by the grip, or by a sheet's own header (Settings, Favorites) away from its
+  // buttons: the 22 px grip alone was hard to hit (2026-10-07). Phones only: from 720px it's a card
+  // without a grip.
+  const phone = matchMedia('(max-width: 719px)');
   function onpointerdown(event: PointerEvent) {
-    if (event.pointerType === 'mouse') return;
+    if (event.pointerType === 'mouse' || !phone.matches) return;
+    const target = event.target as Element;
+    const handle = target.closest<HTMLElement>('.grip, header');
+    if (!handle || !dialog.contains(handle) || target.closest('button, a, input, select, textarea, label')) return;
     dragging = true;
     startY = event.clientY;
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    handle.setPointerCapture(event.pointerId);
   }
 
   function onpointermove(event: PointerEvent) {
@@ -114,8 +121,12 @@
   {oncancel}
   {onanimationend}
   onclick={(event) => event.target === dialog && onclose()}
+  {onpointerdown}
+  {onpointermove}
+  {onpointerup}
+  onpointercancel={onpointerup}
 >
-  <div class="grip" {onpointerdown} {onpointermove} {onpointerup} onpointercancel={onpointerup} aria-hidden="true">
+  <div class="grip" aria-hidden="true">
     <span></span>
   </div>
   <div class="body">
@@ -193,17 +204,20 @@
     padding-bottom: 0;
   }
 
+  /* 6 px taller than before (hard to hit at 22), overlapping the body by as much, so nothing below
+     it moves. */
   .grip {
     flex: none;
     display: grid;
     place-items: center;
-    height: 22px;
+    height: 28px;
+    margin-bottom: -6px;
     touch-action: none;
     cursor: grab;
   }
   .grip span {
-    width: 38px;
-    height: 4px;
+    width: 44px;
+    height: 5px;
     border-radius: 99px;
     background: var(--line-strong);
   }
@@ -226,6 +240,12 @@
   @media (display-mode: browser) and (max-width: 719px) {
     .body {
       padding-bottom: calc(env(safe-area-inset-bottom) + 76px);
+    }
+  }
+
+  @media (max-width: 719px) {
+    .sheet :global(header) {
+      touch-action: none;
     }
   }
 
