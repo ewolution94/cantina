@@ -3,7 +3,7 @@
   import { l, t, weekdayLong, weekdayShort } from '../lib/i18n/index.svelte';
   import { Halftone } from '../lib/halftone';
   import { app, outlet } from '../lib/state/app.svelte';
-  import { effectiveTheme } from '../lib/state/theme.svelte';
+  import { shownTheme } from '../lib/state/theme.svelte';
   import { addDays, formatSlots, outletStatus, statusTone, weekday, type Status } from '../lib/time';
 
   let canvas = $state<HTMLCanvasElement | undefined>();
@@ -81,7 +81,8 @@
   });
 
   $effect(() => {
-    void effectiveTheme();
+    // The theme on the page, not the pick: under themeShift the new tokens arrive a moment later.
+    void shownTheme();
     // After the new tokens have been applied.
     requestAnimationFrame(() => halftone?.readTheme());
   });
