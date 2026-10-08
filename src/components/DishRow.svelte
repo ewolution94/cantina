@@ -115,8 +115,11 @@
     opacity: 0.6;
     transition: opacity 180ms var(--ease);
   }
-  .dish:active::before {
-    opacity: 1;
+  /* For the mouse; a finger gets Folio's pressFeedback (main.ts). */
+  @media (hover: hover) and (pointer: fine) {
+    .dish:active::before {
+      opacity: 1;
+    }
   }
   .dish.dim {
     opacity: 0.42;

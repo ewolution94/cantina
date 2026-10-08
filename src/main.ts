@@ -4,9 +4,13 @@ import '@fontsource-variable/fraunces/opsz.css';
 import '@fontsource-variable/fraunces/opsz-italic.css';
 import './app.css';
 import './lib/scrolling';
+// Every tap answers on a phone (Folio's pressFeedback, plans/mobile-touch.md); Cantina is the pilot.
+import { pressFeedback } from '../vendor/ewo/elements/press.js';
 
 import { mount } from 'svelte';
 import App from './App.svelte';
+
+pressFeedback();
 
 function start() {
   mount(App, { target: document.getElementById('app')! });

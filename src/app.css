@@ -351,8 +351,12 @@ img {
     transform 160ms var(--ease),
     opacity 160ms var(--ease);
 }
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
+/* :active presses are for the mouse; a finger gets Folio's pressFeedback (main.ts), which iOS
+   shows on every tap and :active doesn't. Both at once would shrink a button twice. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 }
 .btn-ghost {
   color: var(--fg-2);
@@ -392,8 +396,10 @@ img {
   background: var(--fill-2);
   color: var(--fg);
 }
-.icon-btn:active {
-  transform: scale(0.94);
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:active {
+    transform: scale(0.94);
+  }
 }
 
 .chip {

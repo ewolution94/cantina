@@ -118,8 +118,11 @@
     background: var(--fill-2);
     color: var(--fg);
   }
-  .day:active {
-    transform: scale(0.96);
+  /* For the mouse; a finger gets Folio's pressFeedback (main.ts). */
+  @media (hover: hover) and (pointer: fine) {
+    .day:active {
+      transform: scale(0.96);
+    }
   }
   .wd {
     font-family: var(--font-mono);
