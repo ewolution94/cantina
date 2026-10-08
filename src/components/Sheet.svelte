@@ -207,6 +207,8 @@
   /* 6 px taller than before (hard to hit at 22), overlapping the body by as much, so nothing below
      it moves. */
   .grip {
+    position: relative;
+    z-index: 2;
     flex: none;
     display: grid;
     place-items: center;
@@ -214,6 +216,18 @@
     margin-bottom: -6px;
     touch-action: none;
     cursor: grab;
+  }
+  /* Above a sticky header (Settings, Favorites), a band of the sheet's colour along the grip's
+     lower edge, 3 px above the body and over its first 6 (the header's padding). Safari clips the
+     scrolled list a device pixel higher than the stuck header, and while scrolling a sliver of the
+     list showed between the grip and the header (2026-10-08). Not on the dish sheet, whose photo
+     starts at the body's top. */
+  .sheet:has(.body :global(header)) .grip::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 9px;
+    background: var(--panel-solid);
   }
   .grip span {
     width: 44px;
