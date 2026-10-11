@@ -128,7 +128,12 @@ async function serveStatic(req, res) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/healthz') return res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+  // A menu refresh that never finishes leaves a new day's readers waiting on it, and nothing on
+  // the page can tell. 503 is what Docker and Pulse can tell (neither restarts anything).
+  if (req.url === '/healthz') {
+    const ok = !api.stuck();
+    return res.writeHead(ok ? 200 : 503, { 'content-type': 'text/plain' }).end(ok ? 'ok' : 'menu refresh stuck');
+  }
 
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
 

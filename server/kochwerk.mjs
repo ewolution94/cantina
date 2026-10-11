@@ -12,6 +12,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import crypto from 'node:crypto';
+import { withDeadline } from './deadline.mjs';
 
 export const DEFAULT_ORIGIN = 'https://kochwerk-web.webspeiseplan.de';
 /** Baked into webspeiseplan's own public bundle (index.js, `PROXY_TOKEN`). Re-read from there if it stops working. */
@@ -472,47 +473,58 @@ class UpstreamError extends Error {}
  * @param {string} [options.token]      proxy token; rediscovered from the site's bundle if rejected
  * @param {number} [options.ttl]        how long a fetched menu counts as fresh (ms)
  * @param {string} [options.cacheFile]  where the last good document survives restarts
+ * @param {number} [options.timeout]    how long one menu request may take (ms)
+ * @param {number} [options.refreshDeadline]  how long a whole refresh may take (ms)
  */
 export function createMenuSource(options = {}) {
   const origin = (options.origin ?? DEFAULT_ORIGIN).replace(/\/$/, '');
   const location = Number(options.location ?? DEFAULT_LOCATION);
   const ttl = options.ttl ?? 15 * 60_000;
   const cacheFile = options.cacheFile ?? null;
+  const timeout = options.timeout ?? 25_000;
+  // Above the slowest refresh that still works: the models (25 s, in parallel), then on a rotated
+  // token the menu page (15 s) and each of its scripts in turn (20 s each), then the models again.
+  const refreshDeadline = options.refreshDeadline ?? 5 * 60_000;
   let token = options.token || DEFAULT_TOKEN;
 
   /** { doc, json, gzip, br, etag, fetchedAt } */
   let current = null;
   let inflight = null;
+  let inflightSince = 0;
   let lastError = null;
   let loadedFromDisk = false;
+
+  /** A GET's body as text, the whole request on our clock (server/deadline.mjs). */
+  function getText(url, timeoutMs, headers) {
+    return withDeadline(timeoutMs, async (signal) => {
+      const res = await fetch(url, { headers, signal });
+      return { ok: res.ok, status: res.status, text: await res.text() };
+    });
+  }
 
   async function call(model, lang) {
     const url = new URL('/index.php', origin);
     url.search = new URLSearchParams({ token, model, location: String(location), languagetype: String(lang), _: String(Date.now()) }).toString();
-    const res = await fetch(url, {
-      headers: {
-        referer: `${origin}/menu`,
-        'x-requested-with': 'XMLHttpRequest',
-        accept: 'application/json',
-        'user-agent': 'Mozilla/5.0 (compatible; Cantina; +menu viewer)',
-      },
-      signal: AbortSignal.timeout(25_000),
+    const res = await getText(url, timeout, {
+      referer: `${origin}/menu`,
+      'x-requested-with': 'XMLHttpRequest',
+      accept: 'application/json',
+      'user-agent': 'Mozilla/5.0 (compatible; Cantina; +menu viewer)',
     });
     if (!res.ok) throw new UpstreamError(`${model}: HTTP ${res.status}`);
-    const text = await res.text();
     // A rejected token (or a missing Referer) doesn't error; it answers 200 with nothing.
-    if (!text.trim()) throw new UpstreamError(`${model}: empty response`);
-    const body = JSON.parse(text);
+    if (!res.text.trim()) throw new UpstreamError(`${model}: empty response`);
+    const body = JSON.parse(res.text);
     if (!body.success || !Array.isArray(body.content)) throw new UpstreamError(`${model}: unsuccessful`);
     return body.content;
   }
 
   /** Reads the current token out of webspeiseplan's own bundle, for when they rotate it. */
   async function discoverToken() {
-    const html = await (await fetch(`${origin}/menu`, { signal: AbortSignal.timeout(15_000) })).text();
+    const html = (await getText(`${origin}/menu`, 15_000)).text;
     const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => new URL(m[1], origin).href);
     for (const src of scripts) {
-      const js = await (await fetch(src, { signal: AbortSignal.timeout(20_000) })).text();
+      const js = (await getText(src, 20_000)).text;
       const match = js.match(/PROXY_TOKEN:"([a-f0-9]{16,64})"/);
       if (match) return match[1];
     }
@@ -559,18 +571,24 @@ export function createMenuSource(options = {}) {
     };
   }
 
-  async function refresh() {
-    let raw;
+  /** The raw models, picking up a rotated token on the way. */
+  async function read() {
     try {
-      raw = await fetchAll();
+      return await fetchAll();
     } catch (err) {
       if (!(err instanceof UpstreamError) || !/empty response/.test(err.message)) throw err;
       const found = await discoverToken().catch(() => null);
       if (!found || found === token) throw err;
       console.log('[cantina] webspeiseplan rotated its token; picked up the new one');
       token = found;
-      raw = await fetchAll();
+      return fetchAll();
     }
+  }
+
+  async function refresh() {
+    // Every request in read() has its own deadline. This one is for the refresh as a whole: it
+    // holds `inflight`, and on a new day every reader of the menu waits on it.
+    const raw = await withDeadline(refreshDeadline, () => read());
     current = pack(normalize(raw), new Date().toISOString());
     lastError = null;
     if (cacheFile) {
@@ -581,13 +599,16 @@ export function createMenuSource(options = {}) {
   }
 
   function refreshOnce() {
-    inflight ??= refresh()
-      .catch((err) => {
-        lastError = err;
-        console.warn('[cantina] upstream refresh failed:', err.message);
-        throw err;
-      })
-      .finally(() => (inflight = null));
+    if (!inflight) {
+      inflightSince = Date.now();
+      inflight = refresh()
+        .catch((err) => {
+          lastError = err;
+          console.warn('[cantina] upstream refresh failed:', err.message);
+          throw err;
+        })
+        .finally(() => (inflight = null));
+    }
     return inflight;
   }
 
@@ -614,7 +635,21 @@ export function createMenuSource(options = {}) {
     return current;
   }
 
-  return { get, get lastError() { return lastError; } };
+  return {
+    get,
+    get lastError() {
+      return lastError;
+    },
+    /**
+     * A refresh has been in flight for longer than its own deadline allows. Not the same as an
+     * old menu: webspeiseplan being down is a failing refresh every few minutes, which is this
+     * working. True only when a refresh never finishes, and on a new day every reader of the
+     * menu waits on it, which no page can tell. `/healthz` answers 503 on it.
+     */
+    get stuck() {
+      return inflight !== null && Date.now() - inflightSince > refreshDeadline + 60_000;
+    },
+  };
 }
 
 // --- HTTP -----------------------------------------------------------------------------------------
@@ -692,7 +727,7 @@ export function createApi(options = {}) {
     res.end(req.method === 'HEAD' ? undefined : body);
   }
 
-  return async function api(req, res, next) {
+  async function api(req, res, next) {
     const { pathname } = new URL(req.url ?? '/', 'http://localhost');
     if (pathname === '/api/menu' || pathname.startsWith('/img/')) {
       if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -702,5 +737,8 @@ export function createApi(options = {}) {
       return pathname === '/api/menu' ? menu(req, res) : image(req, res, pathname);
     }
     return next();
-  };
+  }
+  /** Whether the menu's refresh is stuck (createMenuSource → stuck), for `/healthz`. */
+  api.stuck = () => source.stuck === true;
+  return api;
 }
